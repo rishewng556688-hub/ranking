@@ -4,21 +4,10 @@
 <meta charset="UTF-8">
 <title>奖励排名系统</title>
 <style>
-:root{
-  --bg:#f4f6f9; --card:#fff; --primary:#2563eb; --danger:#dc2626;
-  --border:#e5e7eb; --text:#1f2937; --muted:#6b7280;
-}
+:root{--bg:#f4f6f9;--card:#fff;--primary:#2563eb;--danger:#dc2626;--border:#e5e7eb;--text:#1f2937;--muted:#6b7280;}
 body{margin:0;padding:30px;background:var(--bg);font-family:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;color:var(--text);}
 h2{text-align:center;margin-bottom:20px;font-weight:600;}
-.card{
-  max-width:1100px;
-  margin:auto;
-  background:var(--card);
-  border-radius:14px;
-  padding:20px;
-  box-shadow:0 10px 25px rgba(0,0,0,.06);
-  overflow-x:auto;
-}
+.card{max-width:1100px;margin:auto;background:var(--card);border-radius:14px;padding:20px;box-shadow:0 10px 25px rgba(0,0,0,.06);overflow-x:auto;}
 .controls{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:15px;}
 select,button{padding:7px 14px;border-radius:10px;border:1px solid #e5e7eb;}
 .btn-primary{background:var(--primary);color:#fff;border:none;}
@@ -66,19 +55,18 @@ th{background:#f9fafb;color:#1f2937;font-weight:600;max-width:200px;}
 </div>
 
 <script>
-// 配置
-const EDIT_PASSWORD  = "qwe556688.";
-const CLOUD_PASSWORD = "qwe556688.";
-const GITHUB_USER    = "rishewng556688-hub";   
-const REPO_NAME      = "ranking";    
+const EDIT_PASSWORD  = "qwe556688.";  // 网页编辑密码
+const CLOUD_PASSWORD = "qwe556688.";  // 云端保存密码
+const GITHUB_USER    = "rishewng556688-hub";
+const REPO_NAME      = "ranking";
 const FILE_PATH      = "data.json";
 const BRANCH         = "main";
-const GITHUB_TOKEN   = "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"; // 替换成你的Token
+const GITHUB_TOKEN   = "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"; // ← 在本地替换成你的 Token
 
 let data = [];
 let isUnlocked = false;
 
-// 读取 data.json
+// 加载 data.json
 function loadData(){
   fetch("data.json?t=" + Date.now())
     .then(r => r.json())
@@ -164,7 +152,7 @@ async function saveToGitHub(){
 
   const api = `https://api.github.com/repos/${GITHUB_USER}/${REPO_NAME}/contents/${FILE_PATH}`;
 
-  // 先获取文件信息
+  // 获取文件信息
   let file;
   try{
     const res = await fetch(api, {headers: {"Authorization":`token ${GITHUB_TOKEN}`}});
@@ -175,7 +163,7 @@ async function saveToGitHub(){
   let body;
   if(file.sha){ // 文件存在
     body = {message:"Update ranking data", content, sha:file.sha, branch:BRANCH};
-  } else { // 文件不存在，创建新文件
+  } else { // 文件不存在
     body = {message:"Create ranking data", content, branch:BRANCH};
   }
 
@@ -187,8 +175,12 @@ async function saveToGitHub(){
     });
     const result = await res2.json();
     console.log(result);
-    if(result.commit) alert("✅ 已成功保存到云端，刷新页面即可看到同步数据");
-    else alert("❌ 保存失败，请检查 Token 和权限");
+    if(result.commit){
+      alert("✅ 已成功保存到云端，页面将自动刷新显示最新数据");
+      location.reload();
+    } else {
+      alert("❌ 保存失败，请检查 Token 和权限");
+    }
   } catch(e){ alert("❌ 保存失败，网络或权限问题"); console.log(e);}
 }
 </script>
