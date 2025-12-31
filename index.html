@@ -10,19 +10,46 @@
 }
 body{margin:0;padding:30px;background:var(--bg);font-family:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;color:var(--text);}
 h2{text-align:center;margin-bottom:20px;font-weight:600;}
-.card{max-width:1100px;margin:auto;background:var(--card);border-radius:14px;padding:20px;box-shadow:0 10px 25px rgba(0,0,0,.06);}
+.card{
+  max-width:1100px;
+  margin:auto;
+  background:var(--card);
+  border-radius:14px;
+  padding:20px;
+  box-shadow:0 10px 25px rgba(0,0,0,.06);
+  overflow-x:auto; /* 横向滚动支持窄屏 */
+}
 .controls{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:15px;}
 select,button{padding:7px 14px;border-radius:10px;border:1px solid #e5e7eb;}
 .btn-primary{background:var(--primary);color:#fff;border:none;}
 .btn-secondary{background:#e5e7eb;border:none;}
 .btn-danger{background:var(--danger);color:#fff;border:none;}
-table{width:100%;border-collapse:collapse;margin-top:15px;}
-th,td{padding:12px;border-bottom:1px solid var(--border);text-align:center;}
-th{background:#f9fafb;color:var(--muted);}
+table{
+  width:100%;
+  border-collapse:collapse;
+  table-layout:auto; /* 自动适配列宽 */
+  min-width:600px;   /* 保证英文不挤掉 */
+}
+th,td{
+  padding:12px;
+  border-bottom:1px solid var(--border);
+  text-align:center;
+  white-space:normal;   /* 内容自动换行 */
+  word-break:keep-all;  /* 保持中英文单词完整 */
+}
+th{
+  background:#f9fafb;
+  color:#1f2937;
+  font-weight:600;
+  max-width:200px; /* 最大列宽 */
+}
+.editable[contenteditable="true"]{
+  background:#fff7cc;
+  outline:1px dashed #f59e0b;
+}
 .top1{background:#fff7cc;}
 .top2{background:#f1f5f9;}
 .top3{background:#fef3c7;}
-.editable[contenteditable="true"]{background:#fff7cc;outline:1px dashed #f59e0b;}
 </style>
 </head>
 <body>
@@ -45,7 +72,12 @@ th{background:#f9fafb;color:var(--muted);}
   <table id="table">
     <thead>
       <tr>
-        <th>排名</th><th>姓名</th><th>推送</th><th>首存</th><th>业绩</th><th>操作</th>
+        <th>排名 / Ranking</th>
+        <th>姓名 / Name</th>
+        <th>推送 / Clients Push</th>
+        <th>首存 / First Deposit</th>
+        <th>业绩 / Total Money</th>
+        <th>操作 / Action</th>
       </tr>
     </thead>
     <tbody></tbody>
@@ -53,14 +85,14 @@ th{background:#f9fafb;color:var(--muted);}
 </div>
 
 <script>
-// 🛡️ 配置
+// 配置
 const EDIT_PASSWORD  = "qwe556688.";
 const CLOUD_PASSWORD = "qwe556688.";
-const GITHUB_USER    = "你的GitHub用户名";   // 替换
-const REPO_NAME      = "ranking-system";    // 替换
+const GITHUB_USER    = "rishewng556688-hub";   
+const REPO_NAME      = "ranking";    
 const FILE_PATH      = "data.json";
 const BRANCH         = "main";
-const GITHUB_TOKEN   = "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"; // 替换为你自己的 Token
+const GITHUB_TOKEN   = "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"; 
 
 let data = [];
 let isUnlocked = false;
@@ -68,7 +100,7 @@ let isUnlocked = false;
 // 读取云端 JSON
 fetch("data.json").then(r=>r.json()).then(d=>{data=d;render();});
 
-// 🔓 解锁编辑
+// 解锁编辑
 function unlockEdit(){
   if(prompt("请输入编辑密码：")!==EDIT_PASSWORD){alert("密码错误"); return;}
   isUnlocked=true;
@@ -76,7 +108,7 @@ function unlockEdit(){
   alert("已进入编辑模式");
 }
 
-// 🚀 渲染表格
+// 渲染表格
 function render(){
   const tbody=document.querySelector("tbody");
   tbody.innerHTML="";
@@ -137,7 +169,7 @@ function del(btn){
   sync();
 }
 
-// ☁️ 保存到 GitHub 云端
+// 保存到 GitHub
 async function saveToGitHub(){
   if(!isUnlocked){alert("请先解锁");return;}
   if(prompt("请输入云端保存密码：")!==CLOUD_PASSWORD){alert("云端密码错误");return;}
