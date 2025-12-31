@@ -97,8 +97,14 @@ const GITHUB_TOKEN   = "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";
 let data = [];
 let isUnlocked = false;
 
-// 读取云端 JSON
-fetch("data.json").then(r=>r.json()).then(d=>{data=d;render();});
+// 读取云端 JSON，避免缓存
+function loadData(){
+  fetch("data.json?t=" + Date.now())
+    .then(r => r.json())
+    .then(d => { data = d; render(); })
+    .catch(err => { console.log("读取 data.json 失败，使用默认数据", err); data = [{name:"张三",push:120,first:50,performance:300},{name:"李四",push:90,first:40,performance:250}]; render(); });
+}
+loadData();
 
 // 解锁编辑
 function unlockEdit(){
@@ -174,16 +180,29 @@ async function saveToGitHub(){
   if(!isUnlocked){alert("请先解锁");return;}
   if(prompt("请输入云端保存密码：")!==CLOUD_PASSWORD){alert("云端密码错误");return;}
   sync();
-  const api=`https://api.github.com/repos/${GITHUB_USER}/${REPO_NAME}/contents/${FILE_PATH}`;
-  const res = await fetch(api,{headers:{"Authorization":`token ${GITHUB_TOKEN}`}});
+  
+  const api = `https://api.github.com/repos/${GITHUB_USER}/${REPO_NAME}/contents/${FILE_PATH}?t=${Date.now()}`;
+
+  const res = await fetch(api, {headers: {"Authorization":`token ${GITHUB_TOKEN}`}});
   const file = await res.json();
+
+  if(!file.sha){ alert("获取最新 SHA 失败，请检查文件路径和权限"); return; }
+
   const content = btoa(unescape(encodeURIComponent(JSON.stringify(data,null,2))));
-  await fetch(api,{
+
+  const res2 = await fetch(api, {
     method:"PUT",
-    headers:{"Authorization":`token ${GITHUB_TOKEN}`,"Content-Type":"application/json"},
-    body:JSON.stringify({message:"Update ranking data",content,sha:file.sha,branch:BRANCH})
+    headers:{"Authorization":`token ${GITHUB_TOKEN}`, "Content-Type":"application/json"},
+    body: JSON.stringify({message:"Update ranking data", content, sha:file.sha, branch:BRANCH})
   });
-  alert("✅ 已成功保存到云端，所有人已同步");
+
+  const result = await res2.json();
+  console.log(result);
+  if(result.commit){
+    alert("✅ 已成功保存到云端，刷新页面即可看到同步数据");
+  } else {
+    alert("❌ 保存失败，请检查 Token 和权限");
+  }
 }
 </script>
 </body>
