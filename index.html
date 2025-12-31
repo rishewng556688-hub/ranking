@@ -4,111 +4,82 @@
 <meta charset="UTF-8">
 <title>奖励排名系统</title>
 <style>
-:root{--bg:#f4f6f9;--card:#fff;--primary:#2563eb;--danger:#dc2626;--border:#e5e7eb;--text:#1f2937;--muted:#6b7280;}
-body{margin:0;padding:30px;background:var(--bg);font-family:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;color:var(--text);}
-h2{text-align:center;margin-bottom:20px;font-weight:600;}
-.card{max-width:1100px;margin:auto;background:var(--card);border-radius:14px;padding:20px;box-shadow:0 10px 25px rgba(0,0,0,.06);overflow-x:auto;}
-.controls{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:15px;}
-select,button{padding:7px 14px;border-radius:10px;border:1px solid #e5e7eb;}
-.btn-primary{background:var(--primary);color:#fff;border:none;}
-.btn-secondary{background:#e5e7eb;border:none;}
-.btn-danger{background:var(--danger);color:#fff;border:none;}
-table{width:100%;border-collapse:collapse;table-layout:auto;min-width:600px;}
-th,td{padding:12px;border-bottom:1px solid var(--border);text-align:center;white-space:normal;word-break:keep-all;}
-th{background:#f9fafb;color:#1f2937;font-weight:600;max-width:200px;}
-.editable[contenteditable="true"]{background:#fff7cc;outline:1px dashed #f59e0b;}
-.top1{background:#fff7cc;}
-.top2{background:#f1f5f9;}
-.top3{background:#fef3c7;}
+body{font-family:sans-serif;padding:20px;background:#f4f6f9;}
+table{width:100%;border-collapse:collapse;table-layout:auto;}
+th,td{border:1px solid #ccc;padding:8px;text-align:center;word-break:break-word;}
+.editable[contenteditable="true"]{background:#fff7cc;}
+button{padding:5px 10px;margin:2px;}
 </style>
 </head>
 <body>
 <h2>🏆 奖励排名系统</h2>
-<div class="card">
-  <div class="controls">
-    <div>排名依据 / Ranking by：
-      <select id="rankType" onchange="updateRanking()">
-        <option value="performance">业绩 / Total Money</option>
-        <option value="push">推送 / Clients Push</option>
-        <option value="first">首存 / First Deposit</option>
-      </select>
-    </div>
-    <div>
-      <button class="btn-secondary" onclick="unlockEdit()">🔓 解锁编辑</button>
-      <button class="btn-primary" onclick="saveToGitHub()">☁️ 保存到云端</button>
-      <button class="btn-primary" onclick="addPerson()">➕ 添加人员</button>
-    </div>
-  </div>
-  <table id="table">
-    <thead>
-      <tr>
-        <th>排名 / Ranking</th>
-        <th>姓名 / Name</th>
-        <th>推送 / Clients Push</th>
-        <th>首存 / First Deposit</th>
-        <th>业绩 / Total Money</th>
-        <th>操作 / Action</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-</div>
+
+<label>排名依据：
+<select id="rankType">
+  <option value="performance">业绩 / Total Money</option>
+  <option value="push">推送 / Clients Push</option>
+  <option value="first">首存 / First Deposit</option>
+</select>
+</label>
+<button onclick="unlockEdit()">🔓 解锁编辑</button>
+<button onclick="saveCloud()">☁️ 保存到云端</button>
+<button onclick="addPerson()">➕ 添加人员</button>
+
+<table id="table">
+<thead>
+<tr>
+<th>排名 / Ranking</th>
+<th>姓名 / Name</th>
+<th>推送 / Clients Push</th>
+<th>首存 / First Deposit</th>
+<th>业绩 / Total Money</th>
+<th>操作 / Action</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
 
 <script>
-const EDIT_PASSWORD  = "qwe556688.";  // 网页编辑密码
-const CLOUD_PASSWORD = "qwe556688.";  // 云端保存密码
-const GITHUB_USER    = "rishewng556688-hub";
-const REPO_NAME      = "ranking";
-const FILE_PATH      = "data.json";
-const BRANCH         = "main";
-const GITHUB_TOKEN   = "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"; // ← 在本地替换成你的 Token
-
+const CLOUD_PASSWORD = "qwe556688.";
 let data = [];
-let isUnlocked = false;
+let unlocked = false;
 
-// 加载 data.json
-function loadData(){
-  fetch("data.json?t=" + Date.now())
-    .then(r => r.json())
-    .then(d => { data = d; render(); })
-    .catch(err => { console.log("读取 data.json 失败，使用默认数据", err); data = [{name:"张三",push:120,first:50,performance:300},{name:"李四",push:90,first:40,performance:250}]; render(); });
-}
-loadData();
-
-// 解锁编辑
-function unlockEdit(){
-  if(prompt("请输入编辑密码：")!==EDIT_PASSWORD){alert("密码错误"); return;}
-  isUnlocked=true;
-  document.querySelectorAll(".editable").forEach(e=>e.contentEditable="true");
-  alert("已进入编辑模式");
-}
+// 读取 data.json
+fetch('data.json?t='+Date.now())
+  .then(r=>r.json())
+  .then(d=>{data=d;render();})
+  .catch(()=>{data=[{"name":"张三","push":120,"first":50,"performance":300},{"name":"李四","push":90,"first":40,"performance":250}];render();});
 
 // 渲染表格
 function render(){
-  const tbody=document.querySelector("tbody");
-  tbody.innerHTML="";
+  const tbody = document.querySelector("tbody");
+  tbody.innerHTML = "";
   data.forEach(d=>{
-    const tr=tbody.insertRow();
-    tr.innerHTML=`
-      <td></td>
+    const tr = tbody.insertRow();
+    tr.innerHTML = `<td></td>
       <td class="editable name">${d.name}</td>
       <td class="editable push">${d.push}</td>
       <td class="editable first">${d.first}</td>
       <td class="editable performance">${d.performance}</td>
-      <td><button class="btn-danger" onclick="del(this)">删除</button></td>
-    `;
+      <td><button onclick="del(this)">删除</button></td>`;
     tr.querySelectorAll(".editable").forEach(td=>{
       td.contentEditable=false;
-      td.oninput=()=>{
-        if(!td.classList.contains("name")) td.innerText = td.innerText.replace(/\D/g,"");
-        sync();
-      };
+      td.oninput=()=>{if(!td.classList.contains("name")) td.innerText = td.innerText.replace(/\D/g,""); sync();}
     });
   });
   updateRanking();
 }
 
-// 同步表格到 data 数组
+// 解锁编辑
+function unlockEdit(){unlocked = true; document.querySelectorAll(".editable").forEach(td=>td.contentEditable=true); alert("已解锁编辑");}
+
+// 添加人员
+function addPerson(){if(!unlocked){alert("请先解锁"); return;} data.push({name:"新成员",push:0,first:0,performance:0}); render();}
+
+// 删除
+function del(btn){if(!unlocked){alert("请先解锁"); return;} btn.closest("tr").remove(); sync();}
+
+// 同步 data
 function sync(){
   data=[...document.querySelectorAll("tbody tr")].map(r=>({
     name:r.querySelector(".name").innerText,
@@ -119,69 +90,29 @@ function sync(){
   updateRanking();
 }
 
-// 排名更新
+// 排名
 function updateRanking(){
-  const type=document.getElementById("rankType").value;
+  const type = document.getElementById("rankType").value;
   data.sort((a,b)=>b[type]-a[type]);
-  const rows=[...document.querySelectorAll("tbody tr")];
-  rows.forEach((r,i)=>{
-    r.cells[0].innerText=i+1;
-    r.className=i===0?"top1":i===1?"top2":i===2?"top3":"";
-  });
+  [...document.querySelectorAll("tbody tr")].forEach((r,i)=>{r.cells[0].innerText=i+1;});
 }
 
-// 添加人员
-function addPerson(){
-  if(!isUnlocked){alert("请先解锁");return;}
-  data.push({name:"新成员",push:0,first:0,performance:0});
-  render();
-}
-
-// 删除人员
-function del(btn){
-  if(!isUnlocked){alert("请先解锁");return;}
-  btn.closest("tr").remove();
+// 保存到云端
+async function saveCloud(){
+  if(!unlocked){alert("请先解锁");return;}
+  if(prompt("请输入云端密码")!==CLOUD_PASSWORD){alert("密码错误"); return;}
   sync();
-}
-
-// 保存到 GitHub
-async function saveToGitHub(){
-  if(!isUnlocked){alert("请先解锁");return;}
-  if(prompt("请输入云端保存密码：")!==CLOUD_PASSWORD){alert("云端密码错误");return;}
-  sync();
-
-  const api = `https://api.github.com/repos/${GITHUB_USER}/${REPO_NAME}/contents/${FILE_PATH}`;
-
-  // 获取文件信息
-  let file;
-  try{
-    const res = await fetch(api, {headers: {"Authorization":`token ${GITHUB_TOKEN}`}});
-    file = await res.json();
-  } catch(e){ alert("获取文件信息失败"); console.log(e); return; }
-
-  const content = btoa(unescape(encodeURIComponent(JSON.stringify(data,null,2))));
-  let body;
-  if(file.sha){ // 文件存在
-    body = {message:"Update ranking data", content, sha:file.sha, branch:BRANCH};
-  } else { // 文件不存在
-    body = {message:"Create ranking data", content, branch:BRANCH};
-  }
-
-  try{
-    const res2 = await fetch(api, {
-      method:"PUT",
-      headers:{"Authorization":`token ${GITHUB_TOKEN}`, "Content-Type":"application/json"},
-      body: JSON.stringify(body)
-    });
-    const result = await res2.json();
-    console.log(result);
-    if(result.commit){
-      alert("✅ 已成功保存到云端，页面将自动刷新显示最新数据");
-      location.reload();
-    } else {
-      alert("❌ 保存失败，请检查 Token 和权限");
-    }
-  } catch(e){ alert("❌ 保存失败，网络或权限问题"); console.log(e);}
+  const json = JSON.stringify(data);
+  const workflowApi = `https://api.github.com/repos/rishewng556688-hub/ranking/actions/workflows/save.yml/dispatches`;
+  await fetch(workflowApi,{
+    method:"POST",
+    headers:{
+      "Accept":"application/vnd.github+json",
+      "Authorization":"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",
+      "Content-Type":"application/json"
+    },
+    body: JSON.stringify({ref:"main",inputs:{data:json}})
+  }).then(r=>{if(r.ok) alert("✅ 保存成功，刷新页面显示最新数据"); else alert("❌ 保存失败");});
 }
 </script>
 </body>
