@@ -1,0 +1,14 @@
+[
+  {
+    "name": "张三",
+    "push": 120,
+    "first": 50,
+    "performance": 300
+  },
+  {
+    "name": "李四",
+    "push": 90,
+    "first": 40,
+    "performance": 250
+  }
+]
