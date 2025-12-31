@@ -3,146 +3,49 @@
 <head>
 <meta charset="UTF-8">
 <title>奖励排名系统</title>
-
 <style>
 :root{
-  --bg:#f4f6f9;
-  --card:#ffffff;
-  --primary:#2563eb;
-  --danger:#dc2626;
-  --border:#e5e7eb;
-  --text:#1f2937;
-  --muted:#6b7280;
+  --bg:#f4f6f9; --card:#fff; --primary:#2563eb; --danger:#dc2626;
+  --border:#e5e7eb; --text:#1f2937; --muted:#6b7280;
 }
-
-body{
-  margin:0;
-  padding:30px;
-  background:var(--bg);
-  font-family:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
-  color:var(--text);
-}
-
-h2{
-  text-align:center;
-  margin-bottom:20px;
-  font-weight:600;
-}
-
-.card{
-  max-width:1100px;
-  margin:auto;
-  background:var(--card);
-  border-radius:14px;
-  box-shadow:0 10px 25px rgba(0,0,0,.06);
-  padding:20px;
-}
-
-.controls{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  flex-wrap:wrap;
-  gap:10px;
-  margin-bottom:15px;
-}
-
-.controls-left{
-  display:flex;
-  align-items:center;
-  gap:10px;
-}
-
-select{
-  padding:6px 12px;
-  border-radius:8px;
-  border:1px solid var(--border);
-}
-
-button{
-  padding:7px 14px;
-  border-radius:10px;
-  border:none;
-  cursor:pointer;
-  font-size:14px;
-}
-
-.btn-primary{background:var(--primary);color:#fff;}
-.btn-secondary{background:#e5e7eb;}
-.btn-danger{background:var(--danger);color:#fff;}
-
-table{
-  width:100%;
-  border-collapse:collapse;
-}
-
-th,td{
-  padding:12px;
-  border-bottom:1px solid var(--border);
-  text-align:center;
-}
-
-th{
-  background:#f9fafb;
-  color:var(--muted);
-  font-weight:500;
-}
-
-tr:hover{background:#f9fafb;}
-
-.top1{background:linear-gradient(90deg,#fff7cc,#fff);}
-.top2{background:linear-gradient(90deg,#f1f5f9,#fff);}
-.top3{background:linear-gradient(90deg,#fef3c7,#fff);}
-
-.editable{
-  padding:2px 6px;
-  border-radius:6px;
-  cursor:text;
-}
-
-.editable[contenteditable="true"]{
-  background:#fff7cc;
-  outline:1px dashed #f59e0b;
-}
-
-.action-btn{
-  padding:5px 10px;
-  font-size:12px;
-}
+body{margin:0;padding:30px;background:var(--bg);font-family:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;color:var(--text);}
+h2{text-align:center;margin-bottom:20px;font-weight:600;}
+.card{max-width:1100px;margin:auto;background:var(--card);border-radius:14px;padding:20px;box-shadow:0 10px 25px rgba(0,0,0,.06);}
+.controls{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:15px;}
+select,button{padding:7px 14px;border-radius:10px;border:1px solid #e5e7eb;}
+.btn-primary{background:var(--primary);color:#fff;border:none;}
+.btn-secondary{background:#e5e7eb;border:none;}
+.btn-danger{background:var(--danger);color:#fff;border:none;}
+table{width:100%;border-collapse:collapse;margin-top:15px;}
+th,td{padding:12px;border-bottom:1px solid var(--border);text-align:center;}
+th{background:#f9fafb;color:var(--muted);}
+.top1{background:#fff7cc;}
+.top2{background:#f1f5f9;}
+.top3{background:#fef3c7;}
+.editable[contenteditable="true"]{background:#fff7cc;outline:1px dashed #f59e0b;}
 </style>
 </head>
-
 <body>
-
 <h2>🏆 奖励排名系统</h2>
-
 <div class="card">
   <div class="controls">
-    <div class="controls-left">
-      <span>排名依据 / Ranking by：</span>
-      <select id="rankType" onchange="updateRanking();saveData();">
+    <div>排名依据 / Ranking by：
+      <select id="rankType" onchange="updateRanking()">
         <option value="performance">业绩 / Total Money</option>
         <option value="push">推送 / Clients Push</option>
         <option value="first">首存 / First Deposit</option>
       </select>
     </div>
-
     <div>
       <button class="btn-secondary" onclick="unlockEdit()">🔓 解锁编辑</button>
-      <button class="btn-primary" id="lockBtn" onclick="lockEdit()" style="display:none;">🔒 完成编辑并锁定</button>
+      <button class="btn-primary" onclick="saveToGitHub()">☁️ 保存到云端</button>
       <button class="btn-primary" onclick="addPerson()">➕ 添加人员</button>
     </div>
   </div>
-
-  <table id="rankingTable">
+  <table id="table">
     <thead>
       <tr>
-        <th>排名 / Ranking</th>
-        <th>姓名 / Name</th>
-        <th>推送 / Clients Push</th>
-        <th>首存 / First Deposit</th>
-        <th>业绩 / Total Money</th>
-        <th>操作 / Action</th>
+        <th>排名</th><th>姓名</th><th>推送</th><th>首存</th><th>业绩</th><th>操作</th>
       </tr>
     </thead>
     <tbody></tbody>
@@ -150,37 +53,32 @@ tr:hover{background:#f9fafb;}
 </div>
 
 <script>
-const EDIT_PASSWORD="qwe556688.";
-const STORAGE_KEY="ranking_system_data";
-let isUnlocked=false;
+// 🛡️ 配置
+const EDIT_PASSWORD  = "qwe556688.";
+const CLOUD_PASSWORD = "qwe556688.";
+const GITHUB_USER    = "你的GitHub用户名";   // 替换
+const REPO_NAME      = "ranking-system";    // 替换
+const FILE_PATH      = "data.json";
+const BRANCH         = "main";
+const GITHUB_TOKEN   = "ghp_xxxxxxxxxxxxxxxxx"; // 替换为你自己的 Token
 
-const defaultData=[
-  {name:"张三",push:120,first:50,performance:300},
-  {name:"李四",push:90,first:40,performance:250}
-];
+let data = [];
+let isUnlocked = false;
 
+// 读取云端 JSON
+fetch("data.json").then(r=>r.json()).then(d=>{data=d;render();});
+
+// 🔓 解锁编辑
 function unlockEdit(){
-  const pwd=prompt("请输入编辑密码：");
-  if(pwd!==EDIT_PASSWORD){
-    alert("密码错误");
-    return;
-  }
+  if(prompt("请输入编辑密码：")!==EDIT_PASSWORD){alert("密码错误"); return;}
   isUnlocked=true;
   document.querySelectorAll(".editable").forEach(e=>e.contentEditable="true");
-  document.getElementById("lockBtn").style.display="inline-block";
   alert("已进入编辑模式");
 }
 
-function lockEdit(){
-  isUnlocked=false;
-  document.querySelectorAll(".editable").forEach(e=>e.contentEditable="false");
-  document.getElementById("lockBtn").style.display="none";
-  saveData();
-  alert("已锁定，当前为只读模式");
-}
-
-function renderTable(data){
-  const tbody=document.querySelector("#rankingTable tbody");
+// 🚀 渲染表格
+function render(){
+  const tbody=document.querySelector("tbody");
   tbody.innerHTML="";
   data.forEach(d=>{
     const tr=tbody.insertRow();
@@ -190,90 +88,71 @@ function renderTable(data){
       <td class="editable push">${d.push}</td>
       <td class="editable first">${d.first}</td>
       <td class="editable performance">${d.performance}</td>
-      <td>
-        <button class="btn-danger action-btn" onclick="deleteRow(this)">删除</button>
-      </td>
+      <td><button class="btn-danger" onclick="del(this)">删除</button></td>
     `;
-    tr.querySelectorAll(".editable").forEach(el=>{
-      el.contentEditable="false";
-      el.addEventListener("input",()=>{
-        if(!el.classList.contains("name")){
-          el.innerText=el.innerText.replace(/[^\d]/g,"");
-        }
-        updateRanking();
-        saveData();
-      });
+    tr.querySelectorAll(".editable").forEach(td=>{
+      td.contentEditable=false;
+      td.oninput=()=>{
+        if(!td.classList.contains("name")) td.innerText = td.innerText.replace(/\D/g,"");
+        sync();
+      };
     });
   });
   updateRanking();
 }
 
-function addPerson(){
-  if(!isUnlocked){
-    alert("请先解锁编辑");
-    return;
-  }
-  const name=prompt("请输入姓名：");
-  if(!name)return;
-  const data=loadData();
-  data.push({name,push:0,first:0,performance:0});
-  saveData(data);
-  renderTable(data);
-}
-
-function deleteRow(btn){
-  if(!isUnlocked){
-    alert("请先解锁编辑");
-    return;
-  }
-  if(!confirm("确定删除该人员？"))return;
-  btn.closest("tr").remove();
+// 同步表格到 data 数组
+function sync(){
+  data=[...document.querySelectorAll("tbody tr")].map(r=>({
+    name:r.querySelector(".name").innerText,
+    push:+r.querySelector(".push").innerText,
+    first:+r.querySelector(".first").innerText,
+    performance:+r.querySelector(".performance").innerText
+  }));
   updateRanking();
-  saveData();
 }
 
+// 排名更新
 function updateRanking(){
-  const tbody=document.querySelector("#rankingTable tbody");
-  const rows=[...tbody.rows];
   const type=document.getElementById("rankType").value;
-
-  rows.sort((a,b)=>
-    Number(b.querySelector("."+type).innerText) -
-    Number(a.querySelector("."+type).innerText)
-  );
-
+  data.sort((a,b)=>b[type]-a[type]);
+  const rows=[...document.querySelectorAll("tbody tr")];
   rows.forEach((r,i)=>{
     r.cells[0].innerText=i+1;
-    r.classList.remove("top1","top2","top3");
-    if(i===0)r.classList.add("top1");
-    if(i===1)r.classList.add("top2");
-    if(i===2)r.classList.add("top3");
-    tbody.appendChild(r);
+    r.className=i===0?"top1":i===1?"top2":i===2?"top3":"";
   });
 }
 
-function saveData(data){
-  if(!data){
-    data=[];
-    document.querySelectorAll("#rankingTable tbody tr").forEach(r=>{
-      data.push({
-        name:r.querySelector(".name").innerText,
-        push:+r.querySelector(".push").innerText,
-        first:+r.querySelector(".first").innerText,
-        performance:+r.querySelector(".performance").innerText
-      });
-    });
-  }
-  localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+// 添加人员
+function addPerson(){
+  if(!isUnlocked){alert("请先解锁");return;}
+  data.push({name:"新成员",push:0,first:0,performance:0});
+  render();
 }
 
-function loadData(){
-  const raw=localStorage.getItem(STORAGE_KEY);
-  return raw?JSON.parse(raw):defaultData;
+// 删除人员
+function del(btn){
+  if(!isUnlocked){alert("请先解锁");return;}
+  btn.closest("tr").remove();
+  sync();
 }
 
-renderTable(loadData());
+// ☁️ 保存到 GitHub 云端
+async function saveToGitHub(){
+  if(!isUnlocked){alert("请先解锁");return;}
+  if(prompt("请输入云端保存密码：")!==CLOUD_PASSWORD){alert("云端密码错误");return;}
+  sync();
+  const api=`https://api.github.com/repos/${GITHUB_USER}/${REPO_NAME}/contents/${FILE_PATH}`;
+  const res = await fetch(api,{headers:{"Authorization":`token ${GITHUB_TOKEN}`}});
+  const file = await res.json();
+  const content = btoa(unescape(encodeURIComponent(JSON.stringify(data,null,2))));
+  await fetch(api,{
+    method:"PUT",
+    headers:{"Authorization":`token ${GITHUB_TOKEN}`,"Content-Type":"application/json"},
+    body:JSON.stringify({message:"Update ranking data",content,sha:file.sha,branch:BRANCH})
+  });
+  alert("✅ 已成功保存到云端，所有人已同步");
+}
 </script>
-
 </body>
 </html>
