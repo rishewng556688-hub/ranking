@@ -234,7 +234,8 @@ function renderTable(data){
       el.addEventListener("blur",()=>{
         tr.classList.remove("editing");
         if(!el.classList.contains("name")){
-          el.innerText=el.innerText.replace(/[^\d]/g,"")||"0";
+          // ✅ 允许负号和数字
+          el.innerText = el.innerText.replace(/[^\d\-]/g,"") || "0";
         }
         applyValueStyle(el);
         updateRanking();
