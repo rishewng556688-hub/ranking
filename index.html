@@ -83,7 +83,7 @@ table{
 th,td{
   padding:10px 12px;
   border-bottom:1px solid var(--border);
-  text-align:center;
+  text-align:center; /* 数字居中 */
 }
 
 thead th{
@@ -119,11 +119,6 @@ tr:hover{background:#f9fafb;}
 .editable[contenteditable="true"]{
   background:#fff7cc;
   outline:1px dashed #f59e0b;
-}
-
-td.push,td.first,td.performance{
-  text-align:right;
-  font-variant-numeric:tabular-nums;
 }
 
 tr.editing{
@@ -263,7 +258,7 @@ function addPerson(){
 
 function deleteRow(btn){
   if(!isUnlocked) return alert("请先解锁编辑 / Please unlock edit");
-  if(!confirm("确定删除？ / Confirm delete?")) return;
+  if(!confirm("确定删除该人员？ / Confirm delete?")) return;
   btn.closest("tr").remove();
   updateRanking();
   saveData();
