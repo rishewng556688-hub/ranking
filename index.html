@@ -83,13 +83,12 @@ table{
 th,td{
   padding:10px 12px;
   border-bottom:1px solid var(--border);
-  text-align:center; /* 数字居中 */
+  text-align:center;
 }
 
 thead th{
   position:sticky;
   top:0;
-  z-index:2;
   background:#f9fafb;
   color:var(--muted);
   font-weight:500;
@@ -97,9 +96,11 @@ thead th{
 
 tr:hover{background:#f9fafb;}
 
+/* ===== 排名高亮 ===== */
 .top1{background:linear-gradient(90deg,#fff7cc,#fff);}
 .top2{background:linear-gradient(90deg,#f1f5f9,#fff);}
 .top3{background:linear-gradient(90deg,#fef3c7,#fff);}
+.top4,.top5{background:linear-gradient(90deg,#eef2ff,#fff);}
 
 .rank{
   font-weight:600;
@@ -109,11 +110,13 @@ tr:hover{background:#f9fafb;}
 .top1 .rank::before{content:"🥇 "; }
 .top2 .rank::before{content:"🥈 "; }
 .top3 .rank::before{content:"🥉 "; }
+.top4 .rank::before,
+.top5 .rank::before{content:"⭐ "; }
 
+/* ===== 编辑 ===== */
 .editable{
   padding:2px 6px;
   border-radius:6px;
-  cursor:text;
 }
 
 .editable[contenteditable="true"]{
@@ -131,10 +134,9 @@ tr.editing{
   opacity:0;
   transition:.2s;
 }
-tr:hover .action-btn{
-  opacity:1;
-}
+tr:hover .action-btn{opacity:1;}
 
+/* ===== 数值颜色 ===== */
 .high{color:#16a34a;font-weight:600;}
 .mid{color:#ca8a04;}
 .low{color:#6b7280;}
@@ -157,11 +159,9 @@ tr:hover .action-btn{
     </div>
 
     <div>
-      <button class="btn-secondary" onclick="unlockEdit()">🔓 解锁编辑 / Edit</button>
-      <button class="btn-primary" id="lockBtn" onclick="lockEdit()" style="display:none;">
-        🔒 完成编辑并锁定 / Lock
-      </button>
-      <button class="btn-primary" onclick="addPerson()">➕ 添加人员 / Add</button>
+      <button class="btn-secondary" onclick="unlockEdit()">🔓 编辑 / Edit</button>
+      <button class="btn-primary" id="lockBtn" onclick="lockEdit()" style="display:none;">🔒 锁定 / Lock</button>
+      <button class="btn-primary" onclick="addPerson()">➕ 添加 / Add</button>
     </div>
   </div>
 
@@ -186,7 +186,10 @@ let isUnlocked=false;
 
 const defaultData=[
   {name:"张三",push:120,first:50,performance:300},
-  {name:"李四",push:90,first:40,performance:250}
+  {name:"李四",push:90,first:40,performance:250},
+  {name:"王五",push:80,first:35,performance:200},
+  {name:"赵六",push:70,first:30,performance:180},
+  {name:"孙七",push:60,first:25,performance:160}
 ];
 
 function unlockEdit(){
@@ -234,7 +237,6 @@ function renderTable(data){
       el.addEventListener("blur",()=>{
         tr.classList.remove("editing");
         if(!el.classList.contains("name")){
-          // ✅ 允许负号和数字
           el.innerText = el.innerText.replace(/[^\d\-]/g,"") || "0";
         }
         applyValueStyle(el);
@@ -248,8 +250,8 @@ function renderTable(data){
 }
 
 function addPerson(){
-  if(!isUnlocked) return alert("请先解锁编辑 / Please unlock edit");
-  const name=prompt("请输入姓名 / Name:");
+  if(!isUnlocked) return alert("请先编辑");
+  const name=prompt("请输入姓名");
   if(!name) return;
   const data=loadData();
   data.push({name,push:0,first:0,performance:0});
@@ -258,8 +260,8 @@ function addPerson(){
 }
 
 function deleteRow(btn){
-  if(!isUnlocked) return alert("请先解锁编辑 / Please unlock edit");
-  if(!confirm("确定删除该人员？ / Confirm delete?")) return;
+  if(!isUnlocked) return alert("请先编辑");
+  if(!confirm("确定删除？")) return;
   btn.closest("tr").remove();
   updateRanking();
   saveData();
@@ -277,10 +279,12 @@ function updateRanking(){
 
   rows.forEach((r,i)=>{
     r.cells[0].innerHTML=`<span class="rank">${i+1}</span>`;
-    r.classList.remove("top1","top2","top3");
+    r.classList.remove("top1","top2","top3","top4","top5");
     if(i===0) r.classList.add("top1");
     if(i===1) r.classList.add("top2");
     if(i===2) r.classList.add("top3");
+    if(i===3) r.classList.add("top4");
+    if(i===4) r.classList.add("top5");
     tbody.appendChild(r);
   });
 }
