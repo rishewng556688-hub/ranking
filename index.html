@@ -91,6 +91,13 @@ thead th{
   font-weight:500;
 }
 
+thead small{
+  display:block;
+  font-weight:400;
+  font-size:12px;
+  color:var(--muted);
+}
+
 tr:hover{background:#f9fafb;}
 
 .top1{background:linear-gradient(90deg,#fff7cc,#fff);}
@@ -155,12 +162,12 @@ tr:hover .action-btn{opacity:1;}
   <table id="rankingTable">
     <thead>
       <tr>
-        <th>排名</th>
-        <th>姓名</th>
-        <th>推送</th>
-        <th>首存</th>
-        <th>业绩</th>
-        <th>操作</th>
+        <th>排名<br><small>Ranking</small></th>
+        <th>姓名<br><small>Name</small></th>
+        <th>推送<br><small>Clients Push</small></th>
+        <th>首存<br><small>First Deposit</small></th>
+        <th>业绩<br><small>Total Money</small></th>
+        <th>操作<br><small>Action</small></th>
       </tr>
     </thead>
     <tbody></tbody>
