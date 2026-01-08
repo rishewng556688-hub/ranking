@@ -69,10 +69,7 @@ button{
 
 .btn-primary{background:var(--primary);color:#fff;}
 .btn-secondary{background:#e5e7eb;}
-.btn-danger{
-  background:#fee2e2;
-  color:#b91c1c;
-}
+.btn-danger{background:#fee2e2;color:#b91c1c;}
 .btn-danger:hover{background:#fecaca;}
 
 table{
@@ -96,37 +93,26 @@ thead th{
 
 tr:hover{background:#f9fafb;}
 
-/* ===== 排名高亮 ===== */
 .top1{background:linear-gradient(90deg,#fff7cc,#fff);}
 .top2{background:linear-gradient(90deg,#f1f5f9,#fff);}
 .top3{background:linear-gradient(90deg,#fef3c7,#fff);}
 .top4,.top5{background:linear-gradient(90deg,#eef2ff,#fff);}
 
-.rank{
-  font-weight:600;
-  font-size:16px;
-}
+.rank{font-weight:600;font-size:16px;}
+.top1 .rank::before{content:"🥇 ";}
+.top2 .rank::before{content:"🥈 ";}
+.top3 .rank::before{content:"🥉 ";}
+.top4 .rank::before,.top5 .rank::before{content:"⭐ ";}
 
-.top1 .rank::before{content:"🥇 "; }
-.top2 .rank::before{content:"🥈 "; }
-.top3 .rank::before{content:"🥉 "; }
-.top4 .rank::before,
-.top5 .rank::before{content:"⭐ "; }
-
-/* ===== 编辑 ===== */
 .editable{
   padding:2px 6px;
   border-radius:6px;
 }
-
 .editable[contenteditable="true"]{
   background:#fff7cc;
   outline:1px dashed #f59e0b;
 }
-
-tr.editing{
-  background:#eef2ff !important;
-}
+tr.editing{background:#eef2ff !important;}
 
 .action-btn{
   padding:5px 10px;
@@ -136,7 +122,6 @@ tr.editing{
 }
 tr:hover .action-btn{opacity:1;}
 
-/* ===== 数值颜色 ===== */
 .high{color:#16a34a;font-weight:600;}
 .mid{color:#ca8a04;}
 .low{color:#6b7280;}
@@ -147,7 +132,7 @@ tr:hover .action-btn{opacity:1;}
 
 <h2>🏆 奖励排名系统 / Reward Ranking System</h2>
 
-<div class="card">
+<div class="card" id="captureArea">
   <div class="controls">
     <div class="controls-left">
       <span>排名依据 / Ranking by：</span>
@@ -159,26 +144,31 @@ tr:hover .action-btn{opacity:1;}
     </div>
 
     <div>
-      <button class="btn-secondary" onclick="unlockEdit()">🔓 编辑 / Edit</button>
-      <button class="btn-primary" id="lockBtn" onclick="lockEdit()" style="display:none;">🔒 锁定 / Lock</button>
-      <button class="btn-primary" onclick="addPerson()">➕ 添加 / Add</button>
+      <button class="btn-secondary" onclick="unlockEdit()">🔓 编辑</button>
+      <button class="btn-primary" id="lockBtn" onclick="lockEdit()" style="display:none;">🔒 锁定</button>
+      <button class="btn-primary" onclick="addPerson()">➕ 添加</button>
+      <button class="btn-primary" onclick="capturePage()">📸 一键截图</button>
+      <button class="btn-primary" onclick="captureAll()">📸 导出三种排名</button>
     </div>
   </div>
 
   <table id="rankingTable">
     <thead>
       <tr>
-        <th>排名<br><small>Ranking</small></th>
-        <th>姓名<br><small>Name</small></th>
-        <th>推送<br><small>Clients Push</small></th>
-        <th>首存<br><small>First Deposit</small></th>
-        <th>业绩<br><small>Total Money</small></th>
-        <th>操作<br><small>Action</small></th>
+        <th>排名</th>
+        <th>姓名</th>
+        <th>推送</th>
+        <th>首存</th>
+        <th>业绩</th>
+        <th>操作</th>
       </tr>
     </thead>
     <tbody></tbody>
   </table>
 </div>
+
+<!-- html2canvas -->
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
 <script>
 const STORAGE_KEY="ranking_system_data";
@@ -197,7 +187,6 @@ function unlockEdit(){
   document.querySelectorAll(".editable").forEach(e=>e.contentEditable="true");
   document.getElementById("lockBtn").style.display="inline-block";
 }
-
 function lockEdit(){
   isUnlocked=false;
   document.querySelectorAll(".editable").forEach(e=>e.contentEditable="false");
@@ -217,7 +206,6 @@ function applyValueStyle(el){
 function renderTable(data){
   const tbody=document.querySelector("#rankingTable tbody");
   tbody.innerHTML="";
-
   data.forEach(d=>{
     const tr=tbody.insertRow();
     tr.innerHTML=`
@@ -228,16 +216,14 @@ function renderTable(data){
       <td class="editable performance">${d.performance}</td>
       <td><button class="btn-danger action-btn" onclick="deleteRow(this)">删除</button></td>
     `;
-
     tr.querySelectorAll(".editable").forEach(el=>{
       el.contentEditable="false";
       applyValueStyle(el);
-
       el.addEventListener("focus",()=>tr.classList.add("editing"));
       el.addEventListener("blur",()=>{
         tr.classList.remove("editing");
         if(!el.classList.contains("name")){
-          el.innerText = el.innerText.replace(/[^\d\-]/g,"") || "0";
+          el.innerText=el.innerText.replace(/[^\d\-]/g,"")||"0";
         }
         applyValueStyle(el);
         updateRanking();
@@ -245,7 +231,6 @@ function renderTable(data){
       });
     });
   });
-
   updateRanking();
 }
 
@@ -271,15 +256,13 @@ function updateRanking(){
   const tbody=document.querySelector("#rankingTable tbody");
   const rows=[...tbody.rows];
   const type=document.getElementById("rankType").value;
-
   rows.sort((a,b)=>
     Number(b.querySelector("."+type).innerText) -
     Number(a.querySelector("."+type).innerText)
   );
-
   rows.forEach((r,i)=>{
     r.cells[0].innerHTML=`<span class="rank">${i+1}</span>`;
-    r.classList.remove("top1","top2","top3","top4","top5");
+    r.className="";
     if(i===0) r.classList.add("top1");
     if(i===1) r.classList.add("top2");
     if(i===2) r.classList.add("top3");
@@ -307,6 +290,59 @@ function saveData(data){
 function loadData(){
   const raw=localStorage.getItem(STORAGE_KEY);
   return raw?JSON.parse(raw):defaultData;
+}
+
+/* 一键截图 */
+function capturePage(){
+  lockEdit();
+  setTimeout(()=>{
+    html2canvas(document.getElementById("captureArea"),{
+      scale:2,
+      backgroundColor:"#ffffff"
+    }).then(canvas=>{
+      const a=document.createElement("a");
+      a.download="奖励排名截图.png";
+      a.href=canvas.toDataURL("image/png");
+      a.click();
+    });
+  },200);
+}
+
+/* 自动导出三种排名 */
+async function captureAll(){
+  lockEdit();
+
+  const select = document.getElementById("rankType");
+  const originalValue = select.value;
+
+  const configs = [
+    { value: "performance", name: "业绩" },
+    { value: "push",        name: "推送" },
+    { value: "first",       name: "首存" }
+  ];
+
+  for(const cfg of configs){
+    select.value = cfg.value;
+    updateRanking();
+    saveData();
+
+    await new Promise(r => setTimeout(r, 300));
+
+    const canvas = await html2canvas(
+      document.getElementById("captureArea"),
+      { scale:2, backgroundColor:"#ffffff" }
+    );
+
+    const a = document.createElement("a");
+    a.download = `奖励排名-${cfg.name}.png`;
+    a.href = canvas.toDataURL("image/png");
+    a.click();
+
+    await new Promise(r => setTimeout(r, 300));
+  }
+
+  select.value = originalValue;
+  updateRanking();
 }
 
 renderTable(loadData());
