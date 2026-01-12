@@ -12,20 +12,39 @@ body.dark{
   --bg:#0f172a; --card:#020617; --text:#e5e7eb;
   --muted:#94a3b8; --border:#1e293b; --primary:#38bdf8;
 }
-body{margin:0;padding:30px;background:var(--bg);font-family:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;color:var(--text);}
+body{
+  margin:0;padding:30px;background:var(--bg);
+  font-family:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  color:var(--text);
+}
 h2{text-align:center;margin-bottom:20px;}
-.card{max-width:1200px;margin:auto;background:var(--card);border-radius:14px;padding:20px;box-shadow:0 6px 18px rgba(0,0,0,.05);}
-.controls{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:15px;}
+.card{
+  max-width:1200px;margin:auto;background:var(--card);
+  border-radius:14px;padding:20px;
+  box-shadow:0 6px 18px rgba(0,0,0,.05);
+}
+.controls{
+  display:flex;justify-content:space-between;
+  flex-wrap:wrap;gap:10px;margin-bottom:15px;
+}
 .controls-left{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
-select,input,button{padding:6px 10px;border-radius:8px;border:1px solid var(--border);cursor:pointer;}
+select,input,button{
+  padding:6px 10px;border-radius:8px;
+  border:1px solid var(--border);cursor:pointer;
+}
 button{border:none;}
 .btn-primary{background:var(--primary);color:#fff;}
 .btn-secondary{background:#e5e7eb;}
 .btn-danger{background:#fee2e2;color:#b91c1c;}
-.btn-danger:hover{background:#fecaca;}
 table{width:100%;border-collapse:collapse;}
-th,td{padding:10px 12px;border-bottom:1px solid var(--border);text-align:center;}
-thead th{position:sticky;top:0;background:#f9fafb;color:var(--muted);font-weight:500;}
+th,td{
+  padding:10px 12px;border-bottom:1px solid var(--border);
+  text-align:center;
+}
+thead th{
+  position:sticky;top:0;background:#f9fafb;
+  color:var(--muted);font-weight:500;
+}
 tr:hover{background:#f9fafb;}
 .top1{background:linear-gradient(90deg,#fff7cc,#fff);}
 .top2{background:linear-gradient(90deg,#f1f5f9,#fff);}
@@ -36,16 +55,26 @@ tr:hover{background:#f9fafb;}
 .top2 .rank::before{content:"🥈 ";}
 .top3 .rank::before{content:"🥉 ";}
 .top4 .rank::before,.top5 .rank::before{content:"⭐ ";}
-.editable{padding:2px 6px;border-radius:6px;}
-.editable[contenteditable="true"]{background:#fff7cc;outline:1px dashed #f59e0b;}
-tr.editing{background:#eef2ff !important;}
-.action-btn{padding:5px 10px;font-size:12px;opacity:0;transition:.2s;}
-tr:hover .action-btn{opacity:1;}
 .delta.up{color:#16a34a;font-weight:bold;}
 .delta.down{color:#dc2626;font-weight:bold;}
 .delta.same{color:#6b7280;}
+.editable{padding:2px 6px;border-radius:6px;}
+.editable[contenteditable="true"]{
+  background:#fff7cc;outline:1px dashed #f59e0b;
+}
+tr.editing{background:#eef2ff !important;}
+.action-btn{
+  padding:5px 10px;font-size:12px;
+  opacity:0;transition:.2s;
+}
+tr:hover .action-btn{opacity:1;}
 .zero{color:#6b7280;}
 .hide{display:none;}
+
+/* ===== 业绩正负显示 ===== */
+.performance.pos{color:#16a34a;font-weight:700;}
+.performance.neg{color:#dc2626;font-weight:700;}
+.performance.zero{color:#6b7280;}
 </style>
 </head>
 <body>
@@ -66,8 +95,12 @@ tr:hover .action-btn{opacity:1;}
         <option value="manual">手动</option>
         <option value="percent">按业绩%</option>
       </select>
-      百分比：<input id="rewardPercent" type="number" value="5" style="width:60px" onchange="updateRewards(); saveData();">%
-      奖励名次：前 <input id="rewardTopN" type="number" value="3" min="1" style="width:60px" onchange="updateRewards(); saveData();"> 名
+      百分比：
+      <input id="rewardPercent" type="number" value="5" style="width:60px"
+             onchange="updateRewards(); saveData();">%
+      奖励名次：前
+      <input id="rewardTopN" type="number" value="3" min="1" style="width:60px"
+             onchange="updateRewards(); saveData();"> 名
     </div>
     <div>
       <button class="btn-secondary" onclick="unlockEdit()">🔓 编辑</button>
@@ -83,14 +116,14 @@ tr:hover .action-btn{opacity:1;}
   <table id="rankingTable">
     <thead>
       <tr>
-        <th>排名<br><small>Ranking</small></th>
-        <th>变化<br><small>Delta</small></th>
-        <th>姓名<br><small>Name</small></th>
-        <th>推送<br><small>Clients Push</small></th>
-        <th>首存<br><small>First Deposit</small></th>
-        <th>业绩<br><small>Total Money</small></th>
-        <th>奖励金额<br><small>Reward</small></th>
-        <th>操作<br><small>Action</small></th>
+        <th>排名</th>
+        <th>变化</th>
+        <th>姓名</th>
+        <th>推送</th>
+        <th>首存</th>
+        <th>业绩</th>
+        <th>奖励金额</th>
+        <th>操作</th>
       </tr>
     </thead>
     <tbody></tbody>
@@ -99,11 +132,11 @@ tr:hover .action-btn{opacity:1;}
 
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script>
-const STORAGE_KEY = "ranking_system_data";
-const LAST_KEY = "ranking_system_yesterday";
-let isUnlocked = false;
+const STORAGE_KEY="ranking_system_data";
+const LAST_KEY="ranking_system_yesterday";
+let isUnlocked=false;
 
-const defaultData = [
+const defaultData=[
   {name:"张三",push:120,first:50,performance:300,reward:0},
   {name:"李四",push:90,first:40,performance:250,reward:0},
   {name:"王五",push:80,first:35,performance:200,reward:0},
@@ -111,7 +144,10 @@ const defaultData = [
   {name:"孙七",push:60,first:25,performance:160,reward:0}
 ];
 
-function loadData(){ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || defaultData; }
+function loadData(){
+  return JSON.parse(localStorage.getItem(STORAGE_KEY))||defaultData;
+}
+
 function saveData(){
   const data=[];
   document.querySelectorAll("#rankingTable tbody tr").forEach(r=>{
@@ -147,19 +183,12 @@ function renderTable(data){
       el.addEventListener("blur",()=>{
         tr.classList.remove("editing");
         if(!el.classList.contains("name")){
-  let raw = el.innerText.replace(/[^\d\-]/g,"");
-  let val = parseInt(raw,10);
-
-  if (isNaN(val)) val = 0;
-
-  // 🚫 除了业绩，其他字段不允许负数
-  if (!el.classList.contains("performance") && val < 0) {
-    val = 0;
-  }
-
-  el.innerText = val;
-}
-
+          let raw=el.innerText.replace(/[^\d\-]/g,"");
+          let val=parseInt(raw,10);
+          if(isNaN(val)) val=0;
+          if(!el.classList.contains("performance") && val<0) val=0;
+          el.innerText=val;
+        }
         updateRanking();
         updateRewards();
         saveData();
@@ -184,80 +213,75 @@ function lockEdit(){
 
 function addPerson(){
   if(!isUnlocked) return alert("请先编辑");
-  const name = prompt("请输入姓名");
+  const name=prompt("请输入姓名");
   if(!name) return;
-  const data = loadData();
+  const data=loadData();
   data.push({name,push:0,first:0,performance:0,reward:0});
-  saveData(); renderTable(data);
+  saveData();renderTable(data);
 }
-
 function deleteRow(btn){
   if(!isUnlocked) return alert("请先编辑");
   if(!confirm("确定删除？")) return;
   btn.closest("tr").remove();
-  saveData(); updateRanking(); updateRewards();
+  saveData();updateRanking();updateRewards();
 }
 
-// 保存昨天完整数据
 function saveYesterdayDaily(){
-  const today = new Date().toLocaleDateString();
-  const lastSavedDate = localStorage.getItem("ranking_last_date");
-  if(lastSavedDate !== today){
-    const tbody = document.querySelector("#rankingTable tbody");
-    const snapshot = [];
-    tbody.querySelectorAll("tr").forEach(r => {
-      snapshot.push({
-        name: r.querySelector(".name").innerText,
-        push: +r.querySelector(".push").innerText,
-        first: +r.querySelector(".first").innerText,
-        performance: +r.querySelector(".performance").innerText
+  const today=new Date().toLocaleDateString();
+  if(localStorage.getItem("ranking_last_date")!==today){
+    const snap=[];
+    document.querySelectorAll("#rankingTable tbody tr").forEach(r=>{
+      snap.push({
+        name:r.querySelector(".name").innerText,
+        push:+r.querySelector(".push").innerText,
+        first:+r.querySelector(".first").innerText,
+        performance:+r.querySelector(".performance").innerText
       });
     });
-    localStorage.setItem(LAST_KEY, JSON.stringify(snapshot));
-    localStorage.setItem("ranking_last_date", today);
+    localStorage.setItem(LAST_KEY,JSON.stringify(snap));
+    localStorage.setItem("ranking_last_date",today);
   }
 }
 
-// 更新排名和 delta
 function updateRanking(){
-  const tbody = document.querySelector("#rankingTable tbody");
-  const rows = [...tbody.rows];
-  const type = document.getElementById("rankType").value;
-  const yesterday = JSON.parse(localStorage.getItem(LAST_KEY) || "[]");
+  const tbody=document.querySelector("#rankingTable tbody");
+  const rows=[...tbody.rows];
+  const type=document.getElementById("rankType").value;
+  const yesterday=JSON.parse(localStorage.getItem(LAST_KEY)||"[]");
 
-  // 降序排序，指标相同按姓名稳定排序
   rows.sort((a,b)=>{
-    const diff = Number(b.querySelector("."+type).innerText) - Number(a.querySelector("."+type).innerText);
-    if(diff !== 0) return diff;
-    return a.querySelector(".name").innerText.localeCompare(b.querySelector(".name").innerText);
+    const diff=
+      Number(b.querySelector("."+type).innerText)-
+      Number(a.querySelector("."+type).innerText);
+    if(diff!==0) return diff;
+    return a.querySelector(".name").innerText.localeCompare(
+      b.querySelector(".name").innerText
+    );
   });
 
   rows.forEach((r,i)=>{
-    r.cells[0].innerHTML = `<span class="rank">${i+1}</span>`;
-    r.className = "";
+    r.cells[0].innerHTML=`<span class="rank">${i+1}</span>`;
+    r.className="";
     if(i===0) r.classList.add("top1");
     else if(i===1) r.classList.add("top2");
     else if(i===2) r.classList.add("top3");
     else if(i===3) r.classList.add("top4");
     else if(i===4) r.classList.add("top5");
 
-    const name = r.querySelector(".name").innerText;
-    const oldIndex = yesterday.findIndex(x => x.name === name);
-    const deltaCell = r.cells[1];
+    const name=r.querySelector(".name").innerText;
+    const oldIndex=yesterday.findIndex(x=>x.name===name);
+    const delta=r.cells[1];
+    if(oldIndex===-1){delta.textContent="🆕";delta.className="delta same";}
+    else if(oldIndex>i){delta.textContent="🟢⬆";delta.className="delta up";}
+    else if(oldIndex<i){delta.textContent="🔴⬇";delta.className="delta down";}
+    else{delta.textContent="➖";delta.className="delta same";}
 
-    if(oldIndex === -1){
-      deltaCell.textContent = "🆕";
-      deltaCell.className = "delta same";
-    } else if(oldIndex > i){
-      deltaCell.textContent = "🟢⬆";
-      deltaCell.className = "delta up";
-    } else if(oldIndex < i){
-      deltaCell.textContent = "🔴⬇";
-      deltaCell.className = "delta down";
-    } else {
-      deltaCell.textContent = "➖";
-      deltaCell.className = "delta same";
-    }
+    const perf=r.querySelector(".performance");
+    const v=+perf.innerText;
+    perf.classList.remove("pos","neg","zero");
+    if(v>0) perf.classList.add("pos");
+    else if(v<0) perf.classList.add("neg");
+    else perf.classList.add("zero");
 
     tbody.appendChild(r);
   });
@@ -271,8 +295,8 @@ function updateRewards(){
     const reward=r.querySelector(".reward");
     const perf=+r.querySelector(".performance").innerText||0;
     if(i<topN){
-      reward.innerText=(mode=="percent")?Math.round(perf*percent/100):reward.innerText;
-      reward.contentEditable=isUnlocked && mode=="manual";
+      reward.innerText=(mode==="percent")?Math.round(perf*percent/100):reward.innerText;
+      reward.contentEditable=isUnlocked && mode==="manual";
       reward.classList.remove("zero");
     }else{
       reward.innerText="0";
@@ -282,14 +306,14 @@ function updateRewards(){
   });
 }
 
-// 功能按钮
 function toggleView(){document.getElementById("controlPanel").classList.toggle("hide");}
 function toggleDark(){document.body.classList.toggle("dark");}
 
 function capturePage(){
   toggleView();
   setTimeout(()=>{
-    html2canvas(document.getElementById("captureArea"),{scale:2,backgroundColor:"#fff"}).then(c=>{
+    html2canvas(document.getElementById("captureArea"),{scale:2,backgroundColor:"#fff"})
+    .then(c=>{
       const a=document.createElement("a");
       a.download="奖励排名截图.png";
       a.href=c.toDataURL();
@@ -301,28 +325,31 @@ function capturePage(){
 
 async function captureAll(){
   const select=document.getElementById("rankType");
-  const originalValue=select.value;
-  const configs=[{value:"performance",name:"业绩"},{value:"push",name:"推送"},{value:"first",name:"首存"}];
-  for(const cfg of configs){
+  const original=select.value;
+  const list=[
+    {value:"performance",name:"业绩"},
+    {value:"push",name:"推送"},
+    {value:"first",name:"首存"}
+  ];
+  for(const cfg of list){
     select.value=cfg.value;
-    updateRanking(); updateRewards();
+    updateRanking();updateRewards();
     await new Promise(r=>setTimeout(r,300));
-    const canvas=await html2canvas(document.getElementById("captureArea"),{scale:2,backgroundColor:"#fff"});
+    const canvas=await html2canvas(
+      document.getElementById("captureArea"),
+      {scale:2,backgroundColor:"#fff"}
+    );
     const a=document.createElement("a");
     a.download=`奖励排名-${cfg.name}.png`;
     a.href=canvas.toDataURL();
     a.click();
-    await new Promise(r=>setTimeout(r,300));
   }
-  select.value=originalValue;
-  updateRanking(); updateRewards();
+  select.value=original;
+  updateRanking();updateRewards();
 }
 
-// 初始化
 renderTable(loadData());
 saveYesterdayDaily();
-updateRanking();
-updateRewards();
 </script>
 </body>
 </html>
