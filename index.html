@@ -146,7 +146,20 @@ function renderTable(data){
       el.addEventListener("focus",()=>tr.classList.add("editing"));
       el.addEventListener("blur",()=>{
         tr.classList.remove("editing");
-        if(!el.classList.contains("name")) el.innerText = el.innerText.replace(/[^\d]/g,"") || "0";
+        if(!el.classList.contains("name")){
+  let raw = el.innerText.replace(/[^\d\-]/g,"");
+  let val = parseInt(raw,10);
+
+  if (isNaN(val)) val = 0;
+
+  // 🚫 除了业绩，其他字段不允许负数
+  if (!el.classList.contains("performance") && val < 0) {
+    val = 0;
+  }
+
+  el.innerText = val;
+}
+
         updateRanking();
         updateRewards();
         saveData();
