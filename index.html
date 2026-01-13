@@ -38,9 +38,9 @@ button{border:none;}
 .btn-danger{background:#fee2e2;color:#b91c1c;}
 
 table{width:100%;border-collapse:collapse;}
-th,td{padding:10px 12px;border-bottom:1px solid var(--border);text-align:center;}
 thead th{position:sticky;top:0;background:#f9fafb;color:var(--muted);font-weight:500;}
-tr:hover{background:#f9fafb;}
+tbody tr:hover{background:#f9fafb;}
+th,td{padding:10px 12px;border-bottom:1px solid var(--border);text-align:center;}
 
 .rank{font-weight:700;font-size:16px;}
 .top1 .rank::before{content:"🥇 ";}
@@ -54,9 +54,8 @@ tr:hover{background:#f9fafb;}
 .top3{background:linear-gradient(90deg,#fef3c7,#fff);}
 .top4,.top5{background:linear-gradient(90deg,#eef2ff,#fff);}
 
-.editable[contenteditable="true"]{
-  background:#fff7cc;
-  outline:1px dashed #f59e0b;
+.input-cell{
+  width:100%;border:none;text-align:center;background:transparent;
 }
 tr.editing{background:#eef2ff!important;}
 
@@ -64,15 +63,12 @@ tr.editing{background:#eef2ff!important;}
 .delta.down{color:#dc2626;font-weight:bold;}
 .delta.same{color:#6b7280;}
 
-.performance.pos{color:#16a34a;font-weight:700;}
-.performance.neg{color:#dc2626;font-weight:700;}
+/* 业绩数字正负颜色 */
+.performance input.pos{ color:#16a34a; font-weight:700; }
+.performance input.neg{ color:#dc2626; font-weight:700; }
 
 .hide{display:none;}
-
-/* 删除按钮默认隐藏 */
-.action-btn{
-  display:none;
-}
+.action-btn{display:none;}
 
 .watermark{
   position:absolute;
@@ -164,15 +160,16 @@ const defaultData=[
 function loadData(){
  return JSON.parse(localStorage.getItem(STORAGE_KEY))||defaultData;
 }
+
 function saveData(){
  const data=[];
  document.querySelectorAll("#rankingTable tbody tr").forEach(r=>{
   data.push({
-   name:r.querySelector(".name").innerText,
-   push:+r.querySelector(".push").innerText,
-   first:+r.querySelector(".first").innerText,
-   performance:+r.querySelector(".performance").innerText,
-   reward:+r.querySelector(".reward").innerText
+   name:r.querySelector(".name input").value,
+   push:+r.querySelector(".push input").value,
+   first:+r.querySelector(".first input").value,
+   performance:+r.querySelector(".performance input").value,
+   reward:+r.querySelector(".reward input").value
   });
  });
  localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
@@ -186,46 +183,35 @@ function renderTable(data){
   tr.innerHTML=`
    <td></td>
    <td class="delta"></td>
-   <td class="editable name">${d.name}</td>
-   <td class="editable push">${d.push}</td>
-   <td class="editable first">${d.first}</td>
-   <td class="editable performance">${d.performance}</td>
-   <td class="editable reward">${d.reward}</td>
+   <td class="name"><input class="input-cell" value="${d.name}" ${isUnlocked?'':'readonly'}></td>
+   <td class="push"><input class="input-cell" value="${d.push}" type="number" ${isUnlocked?'':'readonly'}></td>
+   <td class="first"><input class="input-cell" value="${d.first}" type="number" ${isUnlocked?'':'readonly'}></td>
+   <td class="performance"><input class="input-cell" value="${d.performance}" type="number" ${isUnlocked?'':'readonly'}></td>
+   <td class="reward"><input class="input-cell" value="${d.reward}" type="number" ${isUnlocked?'':'readonly'}></td>
    <td>
      <button class="btn-danger action-btn" onclick="deleteRow(this)">删除 / Delete</button>
    </td>
   `;
-  tr.querySelectorAll(".editable").forEach(el=>{
-    el.contentEditable=false;
-    el.addEventListener("focus",()=>tr.classList.add("editing"));
-    el.addEventListener("blur",()=>{
-      tr.classList.remove("editing");
-      if(!el.classList.contains("name")){
-        el.innerText = el.innerText.replace(/[^\d\-]/g,"") || "0";
-      }
-      updateRanking();
-      updateRewards();
-      saveData();
-    });
-  });
  });
  updateRanking();
  updateRewards();
 }
 
+// 保存昨日排名
 function saveYesterdayDaily(){
  const today=new Date().toLocaleDateString();
  const last=localStorage.getItem("ranking_last_date");
  if(last!==today){
   const snap=[];
   document.querySelectorAll("tbody tr").forEach(r=>{
-   snap.push({name:r.querySelector(".name").innerText});
+   snap.push({name:r.querySelector(".name input").value});
   });
   localStorage.setItem(LAST_KEY,JSON.stringify(snap));
   localStorage.setItem("ranking_last_date",today);
  }
 }
 
+// 排序
 function updateRanking(){
  const tbody=document.querySelector("tbody");
  const rows=[...tbody.rows];
@@ -233,9 +219,9 @@ function updateRanking(){
  const yesterday=JSON.parse(localStorage.getItem(LAST_KEY)||"[]");
 
  rows.sort((a,b)=>{
-  const diff=Number(b.querySelector("."+type).innerText)-Number(a.querySelector("."+type).innerText);
+  const diff=Number(b.querySelector("."+type+" input").value)-Number(a.querySelector("."+type+" input").value);
   if(diff!==0) return diff;
-  return a.querySelector(".name").innerText.localeCompare(b.querySelector(".name").innerText);
+  return a.querySelector(".name input").value.localeCompare(b.querySelector(".name input").value);
  });
 
  rows.forEach((r,i)=>{
@@ -243,7 +229,7 @@ function updateRanking(){
   r.className="";
   if(i<5) r.classList.add("top"+(i+1));
 
-  const name=r.querySelector(".name").innerText;
+  const name=r.querySelector(".name input").value;
   const old=yesterday.findIndex(x=>x.name===name);
   const d=r.cells[1];
 
@@ -252,8 +238,9 @@ function updateRanking(){
   else if(old<i){d.textContent="🔴⬇";d.className="delta down";}
   else{d.textContent="➖";d.className="delta same";}
 
-  const p=r.querySelector(".performance");
-  const v=+p.innerText;
+  // 正负颜色
+  const p=r.querySelector(".performance input");
+  const v=+p.value;
   p.classList.toggle("pos",v>0);
   p.classList.toggle("neg",v<0);
 
@@ -261,28 +248,26 @@ function updateRanking(){
  });
 }
 
+// 奖励计算
 function updateRewards(){
  const mode=rewardMode.value;
  const percent=+rewardPercent.value||0;
  const topN=+rewardTopN.value||0;
  document.querySelectorAll("tbody tr").forEach((r,i)=>{
-  const reward=r.querySelector(".reward");
-  const perf=+r.querySelector(".performance").innerText;
+  const reward=r.querySelector(".reward input");
+  const perf=+r.querySelector(".performance input").value;
   if(i<topN){
-   reward.innerText=(mode==="percent")?Math.round(perf*percent/100):reward.innerText;
-   reward.contentEditable=isUnlocked && mode==="manual";
+   if(mode==="percent") reward.value=Math.round(perf*percent/100);
+   reward.readOnly = !(isUnlocked && mode==="manual");
   }else{
-   reward.innerText="0";
-   reward.contentEditable=false;
+   reward.value=0;
+   reward.readOnly = true;
   }
  });
 }
 
-function showWatermark(){
- wmDate.innerText=new Date().toISOString().slice(0,10);
- watermark.style.display="block";
-}
-function hideWatermark(){watermark.style.display="none";}
+function showWatermark(){ wmDate.innerText=new Date().toISOString().slice(0,10); watermark.style.display="block"; }
+function hideWatermark(){ watermark.style.display="none"; }
 
 function capturePage(){
  toggleView();showWatermark();
@@ -325,13 +310,13 @@ function toggleDark(){document.body.classList.toggle("dark");}
 
 function unlockEdit(){
  isUnlocked=true;
- document.querySelectorAll(".editable").forEach(e=>e.contentEditable=true);
+ document.querySelectorAll(".input-cell").forEach(e=>e.removeAttribute("readonly"));
  document.querySelectorAll(".action-btn").forEach(b=>b.style.display="inline-block");
  lockBtn.style.display="inline-block";
 }
 function lockEdit(){
  isUnlocked=false;
- document.querySelectorAll(".editable").forEach(e=>e.contentEditable=false);
+ document.querySelectorAll(".input-cell").forEach(e=>e.setAttribute("readonly",true));
  document.querySelectorAll(".action-btn").forEach(b=>b.style.display="none");
  lockBtn.style.display="none";
  saveData();
@@ -344,6 +329,7 @@ function addPerson(){
  d.push({name:n,push:0,first:0,performance:0,reward:0});
  saveData();renderTable(d);
 }
+
 function deleteRow(b){
  if(!isUnlocked) return alert("请先编辑");
  if(!confirm("确定删除？"))return;
@@ -351,6 +337,7 @@ function deleteRow(b){
  saveData();updateRanking();updateRewards();
 }
 
+// 初始化
 renderTable(loadData());
 saveYesterdayDaily();
 updateRanking();
