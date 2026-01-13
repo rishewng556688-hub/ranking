@@ -3,10 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <title>奖励排名系统</title>
+
 <style>
 :root{
   --bg:#f4f6f9; --card:#ffffff; --primary:#2563eb;
-  --danger:#dc2626; --border:#e5e7eb; --text:#1f2937; --muted:#6b7280;
+  --danger:#dc2626; --border:#e5e7eb;
+  --text:#1f2937; --muted:#6b7280;
 }
 body.dark{
   --bg:#0f172a; --card:#020617; --text:#e5e7eb;
@@ -22,11 +24,9 @@ h2{text-align:center;margin-bottom:20px;}
   max-width:1200px;margin:auto;background:var(--card);
   border-radius:14px;padding:20px;
   box-shadow:0 6px 18px rgba(0,0,0,.05);
+  position:relative;
 }
-.controls{
-  display:flex;justify-content:space-between;
-  flex-wrap:wrap;gap:10px;margin-bottom:15px;
-}
+.controls{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:15px;}
 .controls-left{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
 select,input,button{
   padding:6px 10px;border-radius:8px;
@@ -36,320 +36,326 @@ button{border:none;}
 .btn-primary{background:var(--primary);color:#fff;}
 .btn-secondary{background:#e5e7eb;}
 .btn-danger{background:#fee2e2;color:#b91c1c;}
+
 table{width:100%;border-collapse:collapse;}
-th,td{
-  padding:10px 12px;border-bottom:1px solid var(--border);
-  text-align:center;
-}
-thead th{
-  position:sticky;top:0;background:#f9fafb;
-  color:var(--muted);font-weight:500;
-}
+th,td{padding:10px 12px;border-bottom:1px solid var(--border);text-align:center;}
+thead th{position:sticky;top:0;background:#f9fafb;color:var(--muted);font-weight:500;}
 tr:hover{background:#f9fafb;}
+
+.rank{font-weight:700;font-size:16px;}
+.top1 .rank::before{content:"🥇 ";}
+.top2 .rank::before{content:"🥈 ";}
+.top3 .rank::before{content:"🥉 ";}
+.top4 .rank::before,
+.top5 .rank::before{content:"⭐ ";}
+
 .top1{background:linear-gradient(90deg,#fff7cc,#fff);}
 .top2{background:linear-gradient(90deg,#f1f5f9,#fff);}
 .top3{background:linear-gradient(90deg,#fef3c7,#fff);}
 .top4,.top5{background:linear-gradient(90deg,#eef2ff,#fff);}
-.rank{font-weight:600;font-size:16px;}
-.top1 .rank::before{content:"🥇 ";}
-.top2 .rank::before{content:"🥈 ";}
-.top3 .rank::before{content:"🥉 ";}
-.top4 .rank::before,.top5 .rank::before{content:"⭐ ";}
+
+.editable[contenteditable="true"]{
+  background:#fff7cc;
+  outline:1px dashed #f59e0b;
+}
+tr.editing{background:#eef2ff!important;}
+
 .delta.up{color:#16a34a;font-weight:bold;}
 .delta.down{color:#dc2626;font-weight:bold;}
 .delta.same{color:#6b7280;}
-.editable{padding:2px 6px;border-radius:6px;}
-.editable[contenteditable="true"]{
-  background:#fff7cc;outline:1px dashed #f59e0b;
-}
-tr.editing{background:#eef2ff !important;}
-.action-btn{
-  padding:5px 10px;font-size:12px;
-  opacity:0;transition:.2s;
-}
-tr:hover .action-btn{opacity:1;}
-.zero{color:#6b7280;}
-.hide{display:none;}
 
-/* ===== 业绩正负显示 ===== */
 .performance.pos{color:#16a34a;font-weight:700;}
 .performance.neg{color:#dc2626;font-weight:700;}
-.performance.zero{color:#6b7280;}
+
+.hide{display:none;}
+
+/* 删除按钮默认隐藏 */
+.action-btn{
+  display:none;
+}
+
+.watermark{
+  position:absolute;
+  right:20px;
+  bottom:10px;
+  font-size:12px;
+  color:#9ca3af;
+  opacity:.85;
+  display:none;
+}
 </style>
 </head>
+
 <body>
 
 <h2>🏆 奖励排名系统 / Reward Ranking System</h2>
 
 <div class="card" id="captureArea">
+
   <div class="controls" id="controlPanel">
     <div class="controls-left">
       排名依据：
-      <select id="rankType" onchange="updateRanking(); updateRewards(); saveData();">
+      <select id="rankType" onchange="updateRanking();updateRewards();saveData();">
         <option value="performance">业绩 / Total Money</option>
         <option value="push">推送 / Clients Push</option>
         <option value="first">首存 / First Deposit</option>
       </select>
+
       奖励模式：
-      <select id="rewardMode" onchange="updateRewards(); saveData();">
-        <option value="manual">手动</option>
-        <option value="percent">按业绩%</option>
+      <select id="rewardMode" onchange="updateRewards();saveData();">
+        <option value="manual">手动 / Manual</option>
+        <option value="percent">按业绩% / Percent</option>
       </select>
+
       百分比：
-      <input id="rewardPercent" type="number" value="5" style="width:60px"
-             onchange="updateRewards(); saveData();">%
-      奖励名次：前
-      <input id="rewardTopN" type="number" value="3" min="1" style="width:60px"
-             onchange="updateRewards(); saveData();"> 名
+      <input id="rewardPercent" type="number" value="5" style="width:60px" onchange="updateRewards();saveData();"> %
+
+      奖励前
+      <input id="rewardTopN" type="number" value="3" min="1" style="width:60px" onchange="updateRewards();saveData();"> 名
     </div>
+
     <div>
-      <button class="btn-secondary" onclick="unlockEdit()">🔓 编辑</button>
-      <button class="btn-primary" id="lockBtn" onclick="lockEdit()" style="display:none;">🔒 锁定</button>
-      <button class="btn-primary" onclick="addPerson()">➕ 添加</button>
-      <button class="btn-primary" onclick="toggleView()">👁 展示模式</button>
-      <button class="btn-primary" onclick="toggleDark()">🌙 夜间</button>
-      <button class="btn-primary" onclick="capturePage()">📸 截图</button>
-      <button class="btn-primary" onclick="captureAll()">📸 导出三种排名</button>
+      <button class="btn-secondary" onclick="unlockEdit()">🔓 编辑 / Edit</button>
+      <button class="btn-primary" id="lockBtn" onclick="lockEdit()" style="display:none;">🔒 锁定 / Lock</button>
+      <button class="btn-primary" onclick="addPerson()">➕ 添加 / Add</button>
+      <button class="btn-primary" onclick="toggleView()">👁 展示 / View</button>
+      <button class="btn-primary" onclick="toggleDark()">🌙 夜间 / Dark</button>
+      <button class="btn-primary" onclick="capturePage()">📸 截图 / Capture</button>
+      <button class="btn-primary" onclick="captureAll()">📸 导出三榜 / Export</button>
     </div>
   </div>
 
   <table id="rankingTable">
     <thead>
       <tr>
-        <th>排名</th>
-        <th>变化</th>
-        <th>姓名</th>
-        <th>推送</th>
-        <th>首存</th>
-        <th>业绩</th>
-        <th>奖励金额</th>
-        <th>操作</th>
+        <th>排名<br><small>Ranking</small></th>
+        <th>变化<br><small>Delta</small></th>
+        <th>姓名<br><small>Name</small></th>
+        <th>推送<br><small>Clients Push</small></th>
+        <th>首存<br><small>First Deposit</small></th>
+        <th>业绩<br><small>Total Money</small></th>
+        <th>奖励<br><small>Reward</small></th>
+        <th>操作<br><small>Action</small></th>
       </tr>
     </thead>
     <tbody></tbody>
   </table>
+
+  <div class="watermark" id="watermark">
+    CPT MARKETS · <span id="wmDate"></span>
+  </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
 <script>
 const STORAGE_KEY="ranking_system_data";
 const LAST_KEY="ranking_system_yesterday";
 let isUnlocked=false;
 
 const defaultData=[
-  {name:"张三",push:120,first:50,performance:300,reward:0},
-  {name:"李四",push:90,first:40,performance:250,reward:0},
-  {name:"王五",push:80,first:35,performance:200,reward:0},
-  {name:"赵六",push:70,first:30,performance:180,reward:0},
-  {name:"孙七",push:60,first:25,performance:160,reward:0}
+ {name:"张三",push:120,first:50,performance:300,reward:0},
+ {name:"李四",push:90,first:40,performance:-120,reward:0},
+ {name:"王五",push:80,first:35,performance:200,reward:0},
+ {name:"赵六",push:70,first:30,performance:180,reward:0},
+ {name:"孙七",push:60,first:25,performance:160,reward:0}
 ];
 
 function loadData(){
-  return JSON.parse(localStorage.getItem(STORAGE_KEY))||defaultData;
+ return JSON.parse(localStorage.getItem(STORAGE_KEY))||defaultData;
 }
-
 function saveData(){
-  const data=[];
-  document.querySelectorAll("#rankingTable tbody tr").forEach(r=>{
-    data.push({
-      name:r.querySelector(".name").innerText,
-      push:+r.querySelector(".push").innerText,
-      first:+r.querySelector(".first").innerText,
-      performance:+r.querySelector(".performance").innerText,
-      reward:+r.querySelector(".reward").innerText
-    });
+ const data=[];
+ document.querySelectorAll("#rankingTable tbody tr").forEach(r=>{
+  data.push({
+   name:r.querySelector(".name").innerText,
+   push:+r.querySelector(".push").innerText,
+   first:+r.querySelector(".first").innerText,
+   performance:+r.querySelector(".performance").innerText,
+   reward:+r.querySelector(".reward").innerText
   });
-  localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+ });
+ localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
 }
 
 function renderTable(data){
-  const tbody=document.querySelector("#rankingTable tbody");
-  tbody.innerHTML="";
-  data.forEach(d=>{
-    const tr=tbody.insertRow();
-    tr.innerHTML=`
-      <td></td>
-      <td class="delta"></td>
-      <td class="editable name">${d.name}</td>
-      <td class="editable push">${d.push}</td>
-      <td class="editable first">${d.first}</td>
-      <td class="editable performance">${d.performance}</td>
-      <td class="editable reward">${d.reward}</td>
-      <td><button class="btn-danger action-btn" onclick="deleteRow(this)">删除</button></td>
-    `;
-    tr.querySelectorAll(".editable").forEach(el=>{
-      el.contentEditable=false;
-      el.addEventListener("focus",()=>tr.classList.add("editing"));
-      el.addEventListener("blur",()=>{
-        tr.classList.remove("editing");
-        if(!el.classList.contains("name")){
-          let raw=el.innerText.replace(/[^\d\-]/g,"");
-          let val=parseInt(raw,10);
-          if(isNaN(val)) val=0;
-          if(!el.classList.contains("performance") && val<0) val=0;
-          el.innerText=val;
-        }
-        updateRanking();
-        updateRewards();
-        saveData();
-      });
+ const tbody=document.querySelector("#rankingTable tbody");
+ tbody.innerHTML="";
+ data.forEach(d=>{
+  const tr=tbody.insertRow();
+  tr.innerHTML=`
+   <td></td>
+   <td class="delta"></td>
+   <td class="editable name">${d.name}</td>
+   <td class="editable push">${d.push}</td>
+   <td class="editable first">${d.first}</td>
+   <td class="editable performance">${d.performance}</td>
+   <td class="editable reward">${d.reward}</td>
+   <td>
+     <button class="btn-danger action-btn" onclick="deleteRow(this)">删除 / Delete</button>
+   </td>
+  `;
+  tr.querySelectorAll(".editable").forEach(el=>{
+    el.contentEditable=false;
+    el.addEventListener("focus",()=>tr.classList.add("editing"));
+    el.addEventListener("blur",()=>{
+      tr.classList.remove("editing");
+      if(!el.classList.contains("name")){
+        el.innerText = el.innerText.replace(/[^\d\-]/g,"") || "0";
+      }
+      updateRanking();
+      updateRewards();
+      saveData();
     });
   });
-  updateRanking();
-  updateRewards();
-}
-
-function unlockEdit(){
-  isUnlocked=true;
-  document.querySelectorAll(".editable").forEach(e=>e.contentEditable=true);
-  document.getElementById("lockBtn").style.display="inline-block";
-}
-function lockEdit(){
-  isUnlocked=false;
-  document.querySelectorAll(".editable").forEach(e=>e.contentEditable=false);
-  document.getElementById("lockBtn").style.display="none";
-  saveData();
-}
-
-function addPerson(){
-  if(!isUnlocked) return alert("请先编辑");
-  const name=prompt("请输入姓名");
-  if(!name) return;
-  const data=loadData();
-  data.push({name,push:0,first:0,performance:0,reward:0});
-  saveData();renderTable(data);
-}
-function deleteRow(btn){
-  if(!isUnlocked) return alert("请先编辑");
-  if(!confirm("确定删除？")) return;
-  btn.closest("tr").remove();
-  saveData();updateRanking();updateRewards();
+ });
+ updateRanking();
+ updateRewards();
 }
 
 function saveYesterdayDaily(){
-  const today=new Date().toLocaleDateString();
-  if(localStorage.getItem("ranking_last_date")!==today){
-    const snap=[];
-    document.querySelectorAll("#rankingTable tbody tr").forEach(r=>{
-      snap.push({
-        name:r.querySelector(".name").innerText,
-        push:+r.querySelector(".push").innerText,
-        first:+r.querySelector(".first").innerText,
-        performance:+r.querySelector(".performance").innerText
-      });
-    });
-    localStorage.setItem(LAST_KEY,JSON.stringify(snap));
-    localStorage.setItem("ranking_last_date",today);
-  }
+ const today=new Date().toLocaleDateString();
+ const last=localStorage.getItem("ranking_last_date");
+ if(last!==today){
+  const snap=[];
+  document.querySelectorAll("tbody tr").forEach(r=>{
+   snap.push({name:r.querySelector(".name").innerText});
+  });
+  localStorage.setItem(LAST_KEY,JSON.stringify(snap));
+  localStorage.setItem("ranking_last_date",today);
+ }
 }
 
 function updateRanking(){
-  const tbody=document.querySelector("#rankingTable tbody");
-  const rows=[...tbody.rows];
-  const type=document.getElementById("rankType").value;
-  const yesterday=JSON.parse(localStorage.getItem(LAST_KEY)||"[]");
+ const tbody=document.querySelector("tbody");
+ const rows=[...tbody.rows];
+ const type=document.getElementById("rankType").value;
+ const yesterday=JSON.parse(localStorage.getItem(LAST_KEY)||"[]");
 
-  rows.sort((a,b)=>{
-    const diff=
-      Number(b.querySelector("."+type).innerText)-
-      Number(a.querySelector("."+type).innerText);
-    if(diff!==0) return diff;
-    return a.querySelector(".name").innerText.localeCompare(
-      b.querySelector(".name").innerText
-    );
-  });
+ rows.sort((a,b)=>{
+  const diff=Number(b.querySelector("."+type).innerText)-Number(a.querySelector("."+type).innerText);
+  if(diff!==0) return diff;
+  return a.querySelector(".name").innerText.localeCompare(b.querySelector(".name").innerText);
+ });
 
-  rows.forEach((r,i)=>{
-    r.cells[0].innerHTML=`<span class="rank">${i+1}</span>`;
-    r.className="";
-    if(i===0) r.classList.add("top1");
-    else if(i===1) r.classList.add("top2");
-    else if(i===2) r.classList.add("top3");
-    else if(i===3) r.classList.add("top4");
-    else if(i===4) r.classList.add("top5");
+ rows.forEach((r,i)=>{
+  r.cells[0].innerHTML=`<span class="rank">${i+1}</span>`;
+  r.className="";
+  if(i<5) r.classList.add("top"+(i+1));
 
-    const name=r.querySelector(".name").innerText;
-    const oldIndex=yesterday.findIndex(x=>x.name===name);
-    const delta=r.cells[1];
-    if(oldIndex===-1){delta.textContent="🆕";delta.className="delta same";}
-    else if(oldIndex>i){delta.textContent="🟢⬆";delta.className="delta up";}
-    else if(oldIndex<i){delta.textContent="🔴⬇";delta.className="delta down";}
-    else{delta.textContent="➖";delta.className="delta same";}
+  const name=r.querySelector(".name").innerText;
+  const old=yesterday.findIndex(x=>x.name===name);
+  const d=r.cells[1];
 
-    const perf=r.querySelector(".performance");
-    const v=+perf.innerText;
-    perf.classList.remove("pos","neg","zero");
-    if(v>0) perf.classList.add("pos");
-    else if(v<0) perf.classList.add("neg");
-    else perf.classList.add("zero");
+  if(old===-1){d.textContent="🆕";d.className="delta same";}
+  else if(old>i){d.textContent="🟢⬆";d.className="delta up";}
+  else if(old<i){d.textContent="🔴⬇";d.className="delta down";}
+  else{d.textContent="➖";d.className="delta same";}
 
-    tbody.appendChild(r);
-  });
+  const p=r.querySelector(".performance");
+  const v=+p.innerText;
+  p.classList.toggle("pos",v>0);
+  p.classList.toggle("neg",v<0);
+
+  tbody.appendChild(r);
+ });
 }
 
 function updateRewards(){
-  const mode=document.getElementById("rewardMode").value;
-  const percent=+document.getElementById("rewardPercent").value||0;
-  const topN=+document.getElementById("rewardTopN").value||0;
-  document.querySelectorAll("#rankingTable tbody tr").forEach((r,i)=>{
-    const reward=r.querySelector(".reward");
-    const perf=+r.querySelector(".performance").innerText||0;
-    if(i<topN){
-      reward.innerText=(mode==="percent")?Math.round(perf*percent/100):reward.innerText;
-      reward.contentEditable=isUnlocked && mode==="manual";
-      reward.classList.remove("zero");
-    }else{
-      reward.innerText="0";
-      reward.contentEditable=false;
-      reward.classList.add("zero");
-    }
-  });
+ const mode=rewardMode.value;
+ const percent=+rewardPercent.value||0;
+ const topN=+rewardTopN.value||0;
+ document.querySelectorAll("tbody tr").forEach((r,i)=>{
+  const reward=r.querySelector(".reward");
+  const perf=+r.querySelector(".performance").innerText;
+  if(i<topN){
+   reward.innerText=(mode==="percent")?Math.round(perf*percent/100):reward.innerText;
+   reward.contentEditable=isUnlocked && mode==="manual";
+  }else{
+   reward.innerText="0";
+   reward.contentEditable=false;
+  }
+ });
 }
 
-function toggleView(){document.getElementById("controlPanel").classList.toggle("hide");}
-function toggleDark(){document.body.classList.toggle("dark");}
+function showWatermark(){
+ wmDate.innerText=new Date().toISOString().slice(0,10);
+ watermark.style.display="block";
+}
+function hideWatermark(){watermark.style.display="none";}
 
 function capturePage(){
-  toggleView();
-  setTimeout(()=>{
-    html2canvas(document.getElementById("captureArea"),{scale:2,backgroundColor:"#fff"})
-    .then(c=>{
-      const a=document.createElement("a");
-      a.download="奖励排名截图.png";
-      a.href=c.toDataURL();
-      a.click();
-      toggleView();
-    });
-  },200);
+ toggleView();showWatermark();
+ setTimeout(()=>{
+  html2canvas(captureArea,{scale:2,backgroundColor:"#fff"}).then(c=>{
+   const a=document.createElement("a");
+   a.download="奖励排名.png";
+   a.href=c.toDataURL();
+   a.click();
+   hideWatermark();toggleView();
+  });
+ },200);
 }
 
 async function captureAll(){
-  const select=document.getElementById("rankType");
-  const original=select.value;
-  const list=[
-    {value:"performance",name:"业绩"},
-    {value:"push",name:"推送"},
-    {value:"first",name:"首存"}
-  ];
-  for(const cfg of list){
-    select.value=cfg.value;
-    updateRanking();updateRewards();
-    await new Promise(r=>setTimeout(r,300));
-    const canvas=await html2canvas(
-      document.getElementById("captureArea"),
-      {scale:2,backgroundColor:"#fff"}
-    );
-    const a=document.createElement("a");
-    a.download=`奖励排名-${cfg.name}.png`;
-    a.href=canvas.toDataURL();
-    a.click();
-  }
-  select.value=original;
+ const select=rankType;
+ const original=select.value;
+ const cfgs=[
+  {value:"performance",name:"业绩"},
+  {value:"push",name:"推送"},
+  {value:"first",name:"首存"}
+ ];
+ for(const c of cfgs){
+  select.value=c.value;
   updateRanking();updateRewards();
+  await new Promise(r=>setTimeout(r,300));
+  showWatermark();
+  const canvas=await html2canvas(captureArea,{scale:2,backgroundColor:"#fff"});
+  const a=document.createElement("a");
+  a.download=`奖励排名-${c.name}.png`;
+  a.href=canvas.toDataURL();a.click();
+  hideWatermark();
+ }
+ select.value=original;
+ updateRanking();updateRewards();
+}
+
+function toggleView(){controlPanel.classList.toggle("hide");}
+function toggleDark(){document.body.classList.toggle("dark");}
+
+function unlockEdit(){
+ isUnlocked=true;
+ document.querySelectorAll(".editable").forEach(e=>e.contentEditable=true);
+ document.querySelectorAll(".action-btn").forEach(b=>b.style.display="inline-block");
+ lockBtn.style.display="inline-block";
+}
+function lockEdit(){
+ isUnlocked=false;
+ document.querySelectorAll(".editable").forEach(e=>e.contentEditable=false);
+ document.querySelectorAll(".action-btn").forEach(b=>b.style.display="none");
+ lockBtn.style.display="none";
+ saveData();
+}
+
+function addPerson(){
+ if(!isUnlocked) return alert("请先编辑");
+ const n=prompt("姓名");if(!n)return;
+ const d=loadData();
+ d.push({name:n,push:0,first:0,performance:0,reward:0});
+ saveData();renderTable(d);
+}
+function deleteRow(b){
+ if(!isUnlocked) return alert("请先编辑");
+ if(!confirm("确定删除？"))return;
+ b.closest("tr").remove();
+ saveData();updateRanking();updateRewards();
 }
 
 renderTable(loadData());
 saveYesterdayDaily();
+updateRanking();
+updateRewards();
 </script>
+
 </body>
 </html>
