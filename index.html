@@ -30,17 +30,25 @@ h2{text-align:center;margin-bottom:20px;}
 .controls-left{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
 select,input,button{
   padding:6px 10px;border-radius:8px;
-  border:1px solid var(--border);cursor:pointer;
+  border:1px solid var(--border);
 }
-button{border:none;}
+button{cursor:pointer;border:none;}
 .btn-primary{background:var(--primary);color:#fff;}
 .btn-secondary{background:#e5e7eb;}
 .btn-danger{background:#fee2e2;color:#b91c1c;}
 
 table{width:100%;border-collapse:collapse;}
-thead th{position:sticky;top:0;background:#f9fafb;color:var(--muted);font-weight:500;}
+thead th{
+  position:sticky;top:0;background:#f9fafb;
+  color:var(--muted);font-weight:500;
+}
 tbody tr:hover{background:#f9fafb;}
-th,td{padding:10px 12px;border-bottom:1px solid var(--border);text-align:center;}
+th,td{
+  padding:10px 12px;
+  border-bottom:1px solid var(--border);
+  text-align:center;
+  white-space:nowrap;
+}
 
 .rank{font-weight:700;font-size:16px;}
 .top1 .rank::before{content:"🥇 ";}
@@ -55,17 +63,19 @@ th,td{padding:10px 12px;border-bottom:1px solid var(--border);text-align:center;
 .top4,.top5{background:linear-gradient(90deg,#eef2ff,#fff);}
 
 .input-cell{
-  width:100%;border:none;text-align:center;background:transparent;
+  width:100%;
+  border:none;
+  text-align:center;
+  background:transparent;
+  font:inherit;
 }
-tr.editing{background:#eef2ff!important;}
 
 .delta.up{color:#16a34a;font-weight:bold;}
 .delta.down{color:#dc2626;font-weight:bold;}
 .delta.same{color:#6b7280;}
 
-/* 业绩数字正负颜色 */
-.performance input.pos{ color:#16a34a; font-weight:700; }
-.performance input.neg{ color:#dc2626; font-weight:700; }
+.performance input.pos{color:#16a34a;font-weight:700;}
+.performance input.neg{color:#dc2626;font-weight:700;}
 
 .hide{display:none;}
 .action-btn{display:none;}
@@ -104,20 +114,20 @@ tr.editing{background:#eef2ff!important;}
       </select>
 
       百分比：
-      <input id="rewardPercent" type="number" value="5" style="width:60px" onchange="updateRewards();saveData();"> %
+      <input id="rewardPercent" type="number" value="5" style="width:60px"> %
 
       奖励前
-      <input id="rewardTopN" type="number" value="3" min="1" style="width:60px" onchange="updateRewards();saveData();"> 名
+      <input id="rewardTopN" type="number" value="3" min="1" style="width:60px"> 名
     </div>
 
     <div>
-      <button class="btn-secondary" onclick="unlockEdit()">🔓 编辑 / Edit</button>
-      <button class="btn-primary" id="lockBtn" onclick="lockEdit()" style="display:none;">🔒 锁定 / Lock</button>
-      <button class="btn-primary" onclick="addPerson()">➕ 添加 / Add</button>
-      <button class="btn-primary" onclick="toggleView()">👁 展示 / View</button>
-      <button class="btn-primary" onclick="toggleDark()">🌙 夜间 / Dark</button>
-      <button class="btn-primary" onclick="capturePage()">📸 截图 / Capture</button>
-      <button class="btn-primary" onclick="captureAll()">📸 导出三榜 / Export</button>
+      <button class="btn-secondary" onclick="unlockEdit()">🔓 编辑</button>
+      <button class="btn-primary" id="lockBtn" onclick="lockEdit()" style="display:none;">🔒 锁定</button>
+      <button class="btn-primary" onclick="addPerson()">➕ 添加</button>
+      <button class="btn-primary" onclick="toggleView()">👁 展示</button>
+      <button class="btn-primary" onclick="toggleDark()">🌙 夜间</button>
+      <button class="btn-primary" onclick="capturePage()">📸 截图</button>
+      <button class="btn-primary" onclick="captureAll()">📸 导出三榜</button>
     </div>
   </div>
 
@@ -148,6 +158,7 @@ tr.editing{background:#eef2ff!important;}
 const STORAGE_KEY="ranking_system_data";
 const LAST_KEY="ranking_system_yesterday";
 let isUnlocked=false;
+let isCapturing=false;
 
 const defaultData=[
  {name:"张三",push:120,first:50,performance:300,reward:0},
@@ -163,7 +174,7 @@ function loadData(){
 
 function saveData(){
  const data=[];
- document.querySelectorAll("#rankingTable tbody tr").forEach(r=>{
+ document.querySelectorAll("tbody tr").forEach(r=>{
   data.push({
    name:r.querySelector(".name input").value,
    push:+r.querySelector(".push input").value,
@@ -176,52 +187,34 @@ function saveData(){
 }
 
 function renderTable(data){
- const tbody=document.querySelector("#rankingTable tbody");
+ const tbody=document.querySelector("tbody");
  tbody.innerHTML="";
  data.forEach(d=>{
   const tr=tbody.insertRow();
   tr.innerHTML=`
    <td></td>
    <td class="delta"></td>
-   <td class="name"><input class="input-cell" value="${d.name}" ${isUnlocked?'':'readonly'}></td>
-   <td class="push"><input class="input-cell" value="${d.push}" type="number" ${isUnlocked?'':'readonly'}></td>
-   <td class="first"><input class="input-cell" value="${d.first}" type="number" ${isUnlocked?'':'readonly'}></td>
-   <td class="performance"><input class="input-cell" value="${d.performance}" type="number" ${isUnlocked?'':'readonly'}></td>
-   <td class="reward"><input class="input-cell" value="${d.reward}" type="number" ${isUnlocked?'':'readonly'}></td>
-   <td>
-     <button class="btn-danger action-btn" onclick="deleteRow(this)">删除 / Delete</button>
-   </td>
+   <td class="name"><input class="input-cell" value="${d.name}" readonly></td>
+   <td class="push"><input class="input-cell" type="number" value="${d.push}" readonly></td>
+   <td class="first"><input class="input-cell" type="number" value="${d.first}" readonly></td>
+   <td class="performance"><input class="input-cell" type="number" value="${d.performance}" readonly></td>
+   <td class="reward"><input class="input-cell" type="number" value="${d.reward}" readonly></td>
+   <td><button class="btn-danger action-btn" onclick="deleteRow(this)">删除</button></td>
   `;
  });
  updateRanking();
  updateRewards();
 }
 
-// 保存昨日排名
-function saveYesterdayDaily(){
- const today=new Date().toLocaleDateString();
- const last=localStorage.getItem("ranking_last_date");
- if(last!==today){
-  const snap=[];
-  document.querySelectorAll("tbody tr").forEach(r=>{
-   snap.push({name:r.querySelector(".name input").value});
-  });
-  localStorage.setItem(LAST_KEY,JSON.stringify(snap));
-  localStorage.setItem("ranking_last_date",today);
- }
-}
-
-// 排序
 function updateRanking(){
  const tbody=document.querySelector("tbody");
  const rows=[...tbody.rows];
- const type=document.getElementById("rankType").value;
+ const type=rankType.value;
  const yesterday=JSON.parse(localStorage.getItem(LAST_KEY)||"[]");
 
  rows.sort((a,b)=>{
-  const diff=Number(b.querySelector("."+type+" input").value)-Number(a.querySelector("."+type+" input").value);
-  if(diff!==0) return diff;
-  return a.querySelector(".name input").value.localeCompare(b.querySelector(".name input").value);
+  return +b.querySelector("."+type+" input").value -
+         +a.querySelector("."+type+" input").value;
  });
 
  rows.forEach((r,i)=>{
@@ -238,7 +231,6 @@ function updateRanking(){
   else if(old<i){d.textContent="🔴⬇";d.className="delta down";}
   else{d.textContent="➖";d.className="delta same";}
 
-  // 正负颜色
   const p=r.querySelector(".performance input");
   const v=+p.value;
   p.classList.toggle("pos",v>0);
@@ -248,7 +240,6 @@ function updateRanking(){
  });
 }
 
-// 奖励计算
 function updateRewards(){
  const mode=rewardMode.value;
  const percent=+rewardPercent.value||0;
@@ -257,51 +248,97 @@ function updateRewards(){
   const reward=r.querySelector(".reward input");
   const perf=+r.querySelector(".performance input").value;
   if(i<topN){
-   if(mode==="percent") reward.value=Math.round(perf*percent/100);
-   reward.readOnly = !(isUnlocked && mode==="manual");
+    if(mode==="percent") reward.value=Math.round(perf*percent/100);
+    reward.readOnly=!(isUnlocked&&mode==="manual");
   }else{
-   reward.value=0;
-   reward.readOnly = true;
+    reward.value=0;
+    reward.readOnly=true;
   }
  });
 }
 
-function showWatermark(){ wmDate.innerText=new Date().toISOString().slice(0,10); watermark.style.display="block"; }
-function hideWatermark(){ watermark.style.display="none"; }
+function replaceInputsForCapture(){
+ document.querySelectorAll(".input-cell").forEach(input=>{
+   const span=document.createElement("span");
+   span.textContent=input.value;
+   span.style.display="inline-block";
+   span.style.minWidth="40px";
+   span.style.font=getComputedStyle(input).font;
+   span.style.fontWeight=getComputedStyle(input).fontWeight;
+
+   /* ✅ 关键：复制正负颜色 */
+   if(input.classList.contains("pos")){
+     span.style.color="#16a34a"; // 绿色
+     span.style.fontWeight="700";
+   }
+   if(input.classList.contains("neg")){
+     span.style.color="#dc2626"; // 红色
+     span.style.fontWeight="700";
+   }
+
+   span.className="capture-span";
+   input.after(span);
+   input.style.display="none";
+ });
+}
+
+
+function restoreInputs(){
+ document.querySelectorAll(".capture-span").forEach(s=>s.remove());
+ document.querySelectorAll(".input-cell").forEach(i=>i.style.display="inline-block");
+}
+
+function showWatermark(){
+ wmDate.textContent=new Date().toISOString().slice(0,10);
+ watermark.style.display="block";
+}
+function hideWatermark(){watermark.style.display="none";}
+
+function downloadCanvas(canvas,filename){
+ canvas.toBlob(blob=>{
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;
+  a.download=filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+ });
+}
 
 function capturePage(){
- toggleView();showWatermark();
- setTimeout(()=>{
-  html2canvas(captureArea,{scale:2,backgroundColor:"#fff"}).then(c=>{
-   const a=document.createElement("a");
-   a.download="奖励排名.png";
-   a.href=c.toDataURL();
-   a.click();
-   hideWatermark();toggleView();
-  });
- },200);
+ toggleView();
+ showWatermark();
+ replaceInputsForCapture();
+ setTimeout(async ()=>{
+  const c=await html2canvas(captureArea,{scale:2,backgroundColor:"#fff"});
+  downloadCanvas(c,"奖励排名.png");
+  restoreInputs();
+  hideWatermark();
+  toggleView();
+ },300);
 }
 
 async function captureAll(){
- const select=rankType;
- const original=select.value;
- const cfgs=[
-  {value:"performance",name:"业绩"},
-  {value:"push",name:"推送"},
-  {value:"first",name:"首存"}
+ const original=rankType.value;
+ const list=[
+  {v:"performance",n:"业绩"},
+  {v:"push",n:"推送"},
+  {v:"first",n:"首存"}
  ];
- for(const c of cfgs){
-  select.value=c.value;
+ for(const x of list){
+  rankType.value=x.v;
   updateRanking();updateRewards();
   await new Promise(r=>setTimeout(r,300));
   showWatermark();
-  const canvas=await html2canvas(captureArea,{scale:2,backgroundColor:"#fff"});
-  const a=document.createElement("a");
-  a.download=`奖励排名-${c.name}.png`;
-  a.href=canvas.toDataURL();a.click();
+  replaceInputsForCapture();
+  const c=await html2canvas(captureArea,{scale:2,backgroundColor:"#fff"});
+  downloadCanvas(c,`奖励排名-${x.n}.png`);
+  restoreInputs();
   hideWatermark();
  }
- select.value=original;
+ rankType.value=original;
  updateRanking();updateRewards();
 }
 
@@ -310,38 +347,37 @@ function toggleDark(){document.body.classList.toggle("dark");}
 
 function unlockEdit(){
  isUnlocked=true;
- document.querySelectorAll(".input-cell").forEach(e=>e.removeAttribute("readonly"));
+ document.querySelectorAll(".input-cell").forEach(i=>i.removeAttribute("readonly"));
  document.querySelectorAll(".action-btn").forEach(b=>b.style.display="inline-block");
  lockBtn.style.display="inline-block";
 }
 function lockEdit(){
  isUnlocked=false;
- document.querySelectorAll(".input-cell").forEach(e=>e.setAttribute("readonly",true));
+ document.querySelectorAll(".input-cell").forEach(i=>i.setAttribute("readonly",true));
  document.querySelectorAll(".action-btn").forEach(b=>b.style.display="none");
  lockBtn.style.display="none";
  saveData();
 }
 
 function addPerson(){
- if(!isUnlocked) return alert("请先编辑");
- const n=prompt("姓名");if(!n)return;
+ if(!isUnlocked)return alert("请先编辑");
+ const n=prompt("姓名");
+ if(!n)return;
  const d=loadData();
  d.push({name:n,push:0,first:0,performance:0,reward:0});
- saveData();renderTable(d);
+ saveData();
+ renderTable(d);
 }
 
 function deleteRow(b){
- if(!isUnlocked) return alert("请先编辑");
- if(!confirm("确定删除？"))return;
+ if(!isUnlocked)return;
  b.closest("tr").remove();
- saveData();updateRanking();updateRewards();
+ saveData();
+ updateRanking();
+ updateRewards();
 }
 
-// 初始化
 renderTable(loadData());
-saveYesterdayDaily();
-updateRanking();
-updateRewards();
 </script>
 
 </body>
